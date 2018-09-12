@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "axios": "0.18.0",
+    "axios-cache-adapter": "^2.1.1",
     "clipboard": "1.7.1",
     "codemirror": "5.39.2",
     "connect": "3.6.6",
@@ -46,6 +47,7 @@
     "js-cookie": "2.2.0",
     "jsonlint": "1.6.3",
     "jszip": "3.1.5",
+    "localforage": "^1.7.2",
     "mockjs": "1.0.1-beta3",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",
