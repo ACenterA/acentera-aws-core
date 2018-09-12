@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Message } from 'element-ui'
+// import { Message } from 'element-ui'
 import store from '@/store'
 import { getVersion, getToken, refreshToken, getTokenLastRefresh } from '@/utils/auth'
 
@@ -62,18 +62,21 @@ service.interceptors.response.use(
 
   response => {
     const res = response
-    if (res.status !== 200) {
+    if (res.status === 200 || res.status === 204) {
+      return response
+    } else {
+      // TODO: On 409, retry ?
       if (res.status === 409) {
         // Ask the user to reload its browser, new verseion of this website exists
       }
+
+      console.error('got status ' + res.status)
       if (res.status === 401) {
         return store.dispatch('LogOut').then(() => {
           location.reload()// In order to re-instantiate the vue-router object to avoid bugs
         })
       }
       return Promise.reject('error')
-    } else {
-      return response
     }
   // response => {
   //   const res = response.data
@@ -103,12 +106,13 @@ service.interceptors.response.use(
   //   }
   },
   error => {
-    console.log('err' + error) // for debug
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
+    // For LogOut someone might already have remoed this session ...
+    // Also sessions does auto-expires if left over on the server side or on password / role changes
+    if (error.response.config.url.endsWith('/login/logout')) {
+      if (error.response.status === 401) {
+        return Promise.resolve()
+      }
+    }
     return Promise.reject(error)
   }
 )

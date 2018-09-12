@@ -33,10 +33,11 @@ Object.keys(filters).forEach(key => {
 
 Vue.config.productionTip = false
 
-new Vue({
+const app = new Vue({
   el: '#app',
   router,
   store,
   i18n,
   render: h => h(App)
 })
+window.app = app

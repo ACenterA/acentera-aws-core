@@ -109,6 +109,7 @@ export default new Router({
   routes: constantRouterMap
 })
 
+// admin is always added to all routes (see the async filtering... in store/module/permissions.js
 export const asyncRouterMap = [
   {
     path: '/permission',

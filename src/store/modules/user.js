@@ -1,7 +1,8 @@
-import { loginByUsername, logout, getUserInfo } from '@/api/login'
+import { registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
 
 // TODO: Move request into api/user file
 import request from '@/utils/request'
+import Cookies from 'js-cookie'
 
 import store from '@/store'
 import { MessageBox } from 'element-ui' // Message
@@ -95,6 +96,23 @@ const user = {
         resolve()
       })
     },
+    RegisterByUsernameCode({ commit }, userInfo) {
+      const username = userInfo.username.trim()
+      return new Promise((resolve, reject) => {
+        registerByUsernameCode(username, userInfo.password, userInfo.code).then(response => {
+          const data = response.data
+          console.error('SET TOKEN OF....' + data.token)
+          commit('SET_TOKEN', data.token)
+          setToken(response.data.token)
+          const newRefreshTime = Math.round(new Date().getTime() / 1000)
+          commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+          setTokenLastRefresh(newRefreshTime)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
 
     LoginByUsername({ commit }, userInfo) {
       const username = userInfo.username.trim()
@@ -130,6 +148,12 @@ const user = {
             reject('getInfo: roles must be a non-null array !')
           }
 
+          if (!Cookies.get('language')) {
+            if (data.language) {
+              commit('SET_LANGUAGE', data.language)
+            }
+          }
+
           commit('SET_NAME', data.name)
           commit('SET_AVATAR', data.avatar || 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif')
           commit('SET_INTRODUCTION', data.introduction)
@@ -157,13 +181,17 @@ const user = {
     // 登出
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
+        console.error('calling logout here A')
         logout(state.token).then(() => {
+          console.error('calling logout here B')
           commit('SET_TOKEN', '')
           commit('SET_ADMIN_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_ROLES_ACTIVE', [])
           removeToken()
+          console.error('calling logout here C')
           removeAdminToken()
+          console.error('calling logout here D')
           resolve()
         }).catch(error => {
           reject(error)

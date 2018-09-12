@@ -71,11 +71,18 @@ export default {
     theme: 'Theme',
     size: 'Global Size'
   },
+  language: {
+    switchSuccess: 'Switch Language Success'
+  },
   login: {
     title: 'Login Form',
     logIn: 'Log in',
-    username: 'Username',
-    password: 'Password',
+    signUp: 'Sign up',
+    username: 'My email address',
+    password: 'My password',
+    invalidPassword: 'Username / Password did not match.',
+    PasswordDigitRequirements: 'The password must have at least 6 characters.',
+    UsernameEmailRequirements: 'The username must be a valid email address.',
     any: 'any',
     thirdparty: 'Or connect with',
     thirdpartyTips: 'Can not be simulated on local, so please combine you own business simulation! ! !'

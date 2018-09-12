@@ -37,18 +37,18 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
+      <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
+      <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
 
       <div class="tips">
-        <span>{{ $t('login.username') }} : admin</span>
-        <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
+        <br>
       </div>
       <div class="tips">
-        <span style="margin-right:18px;">{{ $t('login.username') }} : editor</span>
-        <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
+        <br>
       </div>
-
-      <el-button class="thirdparty-button" type="primary" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
+      <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:40%;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
+      <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:40%;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+      <el-button :loading="loading" type="primary" style="display:none;width:30%;margin-bottom:30px;float: right;" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
     </el-form>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog" append-to-body>
@@ -71,24 +71,28 @@ export default {
   name: 'Login',
   components: { LangSelect, SocialSign },
   data() {
+    const activeName = 'Login'
+
     const validateUsername = (rule, value, callback) => {
       if (!isvalidUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+        callback(new Error(this.$t('login.UsernameEmailRequirements')))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error(this.$t('login.PasswordDigitRequirements'))) // 'The password can not be less than 6 digits'))
       } else {
         callback()
       }
     }
     return {
+      activeName,
       loginForm: {
-        username: 'admin',
-        password: '1111111'
+        username: null,
+        password: null,
+        code: null
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -123,6 +127,9 @@ export default {
         this.passwordType = 'password'
       }
     },
+    changeTo(tab) {
+      this.activeName = tab
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
@@ -139,6 +146,24 @@ export default {
         }
       })
     },
+
+    handleRegister() {
+      this.$refs.loginForm.validate(valid => {
+        if (valid) {
+          this.loading = true
+          this.$store.dispatch('RegisterByUsernameCode', this.loginForm).then(() => {
+            this.loading = false
+            this.$router.push({ path: this.redirect || '/' })
+          }).catch(() => {
+            this.loading = false
+          })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+
     afterQRScan() {
       // const hash = window.location.hash.slice(1)
       // const hashObj = getQueryObject(hash)
@@ -152,7 +177,7 @@ export default {
       // if (!codeName) {
       //   alert('第三方登录失败')
       // } else {
-      //   this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
+      //   this.$store.dispatch('LoginByfzparty', codeName).then(() => {
       //     this.$router.push({ path: '/' })
       //   })
       // }
@@ -212,6 +237,10 @@ export default {
 $bg:#2d3a4b;
 $dark_gray:#889aa4;
 $light_gray:#eee;
+
+.el-button+.el-button {
+    margin-left: 0px;
+}
 
 .login-container {
   position: fixed;
