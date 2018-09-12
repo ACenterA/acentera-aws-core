@@ -75,9 +75,15 @@ export default {
     switchSuccess: 'Changement de langue complété avec succès'
   },
   login: {
+    siteConfigError: 'Il y a une erreur de configuration. Le site ne peut pas être configuré. Veuillez contacter le support a l\'addresse suivante support@acentera.com',
     title: 'Connexion à Mon Espace',
     logIn: 'Se connecter',
     signUp: 'Créer mon compte',
+    forgotPassword: 'Mot de passe oublié ?',
+    firstTime: 'Pour configurer et créer votre utilisateur veuillez utiliser admin@acentera.com',
+    passwordOutput: 'Le mot de passe se retrouve dans les \'sorties\' du template créer.',
+    clickHere: 'Cliquez ici pour voir le mot de passe',
+    titleForgetPassword: 'Mot de passe oublié ?',
     invalidPassword: 'L\'authentication a échoué. Vérifier votre courril ainsi que votre mot de passe',
     PasswordDigitRequirements: 'Le mot de passe doit avoir plus de 6 caractères',
     UsernameEmailRequirements: 'Le nom d\'utilisateur doit être un addresse courriel valide.',

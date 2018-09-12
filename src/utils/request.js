@@ -1,7 +1,32 @@
 import axios from 'axios'
+import localforage from 'localforage'
+import { setupCache } from 'axios-cache-adapter'
+
 // import { Message } from 'element-ui'
 import store from '@/store'
-import { getVersion, getToken, refreshToken, getTokenLastRefresh } from '@/utils/auth'
+import { getToken, refreshToken, getTokenLastRefresh } from '@/utils/auth'
+import { getVersion } from '@/utils/settings'
+
+/*
+const config = { headers: {'Content-Type': 'application/json','Cache-Control' : 'no-cache'}};
+const { data } = await axios.get('http://www.youraddress.com/api/data.json', config);
+*/
+
+const localCacheStore = localforage.createInstance({
+  // List of drivers used
+  driver: [
+    localforage.INDEXEDDB,
+    localforage.LOCALSTORAGE
+  ],
+  // Prefix all storage keys to prevent conflicts
+  name: 'admin-rest-cache'
+})
+
+const cache = setupCache({
+  maxAge: 15 * 60 * 1000,
+  debug: true,
+  localCacheStore
+})
 
 // create an axios instance
 const service = axios.create({
@@ -9,75 +34,66 @@ const service = axios.create({
   timeout: 5000 // request timeout
 })
 
-// request interceptor
-service.interceptors.request.use(
-  config => {
-    // Do something before request is sent
-    if (getToken()) {
-      // With the User Token we have received, lets make sure to refresh the token
-      // Every here and there ...
-      // Submit another refresh Token to replace the current token ...
-      config.headers['X-Token'] = getToken()
-      config.headers['X-Version'] = getVersion()
-      var currentTime = Math.round(new Date().getTime() / 1000)
-      var playload = JSON.parse(atob(getToken().split('.')[1]))
-      var tokenExpirationTime = playload.exp
-      var tokenDuration = playload.exp - playload.iat
+const cachedService = axios.create({
+  adapter: cache.adapter,
+  baseURL: process.env.BASE_API, // api 的 base_url
+  timeout: 5000 // request timeout
+})
 
-      // Refresh token every X iterations 25% of expiration time
-      const refreshTime = tokenDuration * 25 / 100
+const configHandler = function(config) {
+  console.error(this)
+  console.error(config)
+  // Do something before request is sent
+  if (getToken()) {
+    // With the User Token we have received, lets make sure to refresh the token
+    // Every here and there ...
+    // Submit another refresh Token to replace the current token ...
+    config.headers['X-Token'] = getToken()
+    config.headers['X-Version'] = getVersion()
+    var currentTime = Math.round(new Date().getTime() / 1000)
+    var playload = JSON.parse(atob(getToken().split('.')[1]))
+    var tokenExpirationTime = playload.exp
+    var tokenDuration = playload.exp - playload.iat
 
-      var refreshIfMinimumOf = tokenDuration - refreshTime
-      if (refreshIfMinimumOf <= 300) {
-        refreshIfMinimumOf = 300
-      }
+    // Refresh token every X iterations 25% of expiration time
+    const refreshTime = tokenDuration * 25 / 100
 
-      var lastTokenRefresh = getTokenLastRefresh()
-      if (Math.abs(currentTime - lastTokenRefresh) >= 300) {
-        store.dispatch('UpdateRefreshTime', currentTime).then(() => {
-          // store.commit('SET_LAST_TOKEN_REFRESH', currentTime)
-          if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
-            return refreshToken(config)
-          }
-        })
-      }
+    var refreshIfMinimumOf = tokenDuration - refreshTime
+    if (refreshIfMinimumOf <= 300) {
+      refreshIfMinimumOf = 300
     }
-    return config
-  },
-  error => {
-    // Do something with request error
-    Promise.reject(error)
+
+    var lastTokenRefresh = getTokenLastRefresh()
+    if (Math.abs(currentTime - lastTokenRefresh) >= 300) {
+      store.dispatch('UpdateRefreshTime', currentTime).then(() => {
+        // store.commit('SET_LAST_TOKEN_REFRESH', currentTime)
+        if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
+          return refreshToken(config)
+        }
+      })
+    }
   }
-)
+  return config
+}
 
-// response interceptor
-service.interceptors.response.use(
-  // response => response,
-  /**
-   * 下面的注释为通过在response里，自定义code来标示请求状态
-   * 当code返回如下情况则说明权限有问题，登出并返回到登录页
-   * 如想通过 xmlhttprequest 来状态码标识 逻辑可写在下面error中
-   * 以下代码均为样例，请结合自生需求加以修改，若不需要，则可删除
-   */
-
-  response => {
-    const res = response
-    if (res.status === 200 || res.status === 204) {
-      return response
-    } else {
-      // TODO: On 409, retry ?
-      if (res.status === 409) {
-        // Ask the user to reload its browser, new verseion of this website exists
-      }
-
-      console.error('got status ' + res.status)
-      if (res.status === 401) {
-        return store.dispatch('LogOut').then(() => {
-          location.reload()// In order to re-instantiate the vue-router object to avoid bugs
-        })
-      }
-      return Promise.reject('error')
+const handleSuccess = function(response) {
+  const res = response
+  if (res.status === 200 || res.status === 204) {
+    return response
+  } else {
+    // TODO: On 409, retry ?
+    if (res.status === 409) {
+      // Ask the user to reload its browser, new verseion of this website exists
     }
+
+    console.error('got status ' + res.status)
+    if (res.status === 401) {
+      return store.dispatch('LogOut').then(() => {
+        location.reload()// In order to re-instantiate the vue-router object to avoid bugs
+      })
+    }
+    return Promise.reject('error')
+  }
   // response => {
   //   const res = response.data
   //   if (res.code !== 20000) {
@@ -104,17 +120,40 @@ service.interceptors.response.use(
   //   } else {
   //     return response.data
   //   }
-  },
-  error => {
-    // For LogOut someone might already have remoed this session ...
-    // Also sessions does auto-expires if left over on the server side or on password / role changes
-    if (error.response.config.url.endsWith('/login/logout')) {
-      if (error.response.status === 401) {
-        return Promise.resolve()
-      }
+}
+const handleError = function(error) {
+  // For LogOut someone might already have remoed this session ...
+  // Also sessions does auto-expires if left over on the server side or on password / role changes
+  if (error.response.config.url.endsWith('/login/logout')) {
+    if (error.response.status === 401) {
+      return Promise.resolve()
     }
-    return Promise.reject(error)
   }
+  return Promise.reject(error)
+}
+
+cachedService.interceptors.request.use(
+  config => configHandler(config),
+  response => handleSuccess(response),
+  error => handleError(error)
 )
 
-export default service
+// response interceptor
+service.interceptors.response.use(
+  config => configHandler(config),
+  response => handleSuccess(response),
+  error => handleError(error)
+)
+
+const handler = function(data, cache) {
+  if (cache) {
+    data['cache'] = cache
+    console.error('using cache')
+    return cachedService(data)
+  } else {
+    console.error('not using cache')
+    return service(data)
+  }
+}
+
+export default handler

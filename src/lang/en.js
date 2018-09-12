@@ -75,12 +75,18 @@ export default {
     switchSuccess: 'Switch Language Success'
   },
   login: {
+    siteConfigError: 'An error occured. The site cannot be configured. Please contact support at support@acentera.com',
     title: 'Login Form',
     logIn: 'Log in',
     signUp: 'Sign up',
+    firstTime: 'Not yet configured, please login using admin@acentera.com',
+    passwordOutput: 'The password can be found in the template \'outputs\'.',
+    clickHere: 'Click here to View template outputs',
     username: 'My email address',
     password: 'My password',
     invalidPassword: 'Username / Password did not match.',
+    forgotPassword: 'Forgot password',
+    titleForgetPassword: 'Password reset ?',
     PasswordDigitRequirements: 'The password must have at least 6 characters.',
     UsernameEmailRequirements: 'The username must be a valid email address.',
     any: 'any',

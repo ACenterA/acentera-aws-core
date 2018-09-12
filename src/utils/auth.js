@@ -6,10 +6,6 @@ const TokenKey = 'Token'
 const TokenLastRefreshKey = 'TokenRefresh'
 const AdminTokenKey = 'Admin-Token'
 
-export function getVersion() {
-  return store.state.app.version
-}
-
 export function getToken() {
   if (store && store.getters && store.getters.token) {
     return store.getters.token

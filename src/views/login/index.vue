@@ -1,55 +1,94 @@
 <template>
   <div class="login-container">
+    <div v-if="isMissingEntry">
+      <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+        <div class="title-container">
+          <lang-select class="set-language"/>
+          <br><br><br>
+          <h3 class="title">{{ $t('login.siteConfigError') }}</h3>
+        </div>
+      </el-form>
+    </div>
+    <div v-else>
+      <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+        <div class="title-container">
+          <h3 class="title">{{ $t('login.title') }}</h3>
+          <lang-select class="set-language"/>
+        </div>
 
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+        <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
+          <h5 class="titleFirstTime">{{ $t('login.firstTime') }}</h5>
+          <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
+          <a :href="getStackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
+        </div>
 
-      <div class="title-container">
-        <h3 class="title">{{ $t('login.title') }}</h3>
-        <lang-select class="set-language"/>
-      </div>
+        <el-form-item prop="username">
+          <span class="svg-container svg-container_login">
+            <svg-icon icon-class="user" />
+          </span>
+          <el-input
+            v-model="loginForm.username"
+            :placeholder="$t('login.username')"
+            name="username"
+            type="text"
+            auto-complete="on"
+          />
+        </el-form-item>
 
-      <el-form-item prop="username">
-        <span class="svg-container svg-container_login">
-          <svg-icon icon-class="user" />
-        </span>
-        <el-input
-          v-model="loginForm.username"
-          :placeholder="$t('login.username')"
-          name="username"
-          type="text"
-          auto-complete="on"
-        />
-      </el-form-item>
+        <el-form-item prop="password">
+          <span class="svg-container">
+            <svg-icon icon-class="password" />
+          </span>
+          <el-input
+            :type="passwordType"
+            v-model="loginForm.password"
+            :placeholder="$t('login.password')"
+            name="password"
+            auto-complete="on"
+            @keyup.enter.native="handleLogin" />
+          <span class="show-pwd" @click="showPwd">
+            <svg-icon icon-class="eye" />
+          </span>
+        </el-form-item>
 
-      <el-form-item prop="password">
-        <span class="svg-container">
-          <svg-icon icon-class="password" />
-        </span>
-        <el-input
-          :type="passwordType"
-          v-model="loginForm.password"
-          :placeholder="$t('login.password')"
-          name="password"
-          auto-complete="on"
-          @keyup.enter.native="handleLogin" />
-        <span class="show-pwd" @click="showPwd">
-          <svg-icon icon-class="eye" />
-        </span>
-      </el-form-item>
+        <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
+        <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
+        <el-button v-if="!settings.firstTime && activeName=='Login'" :loading="loading" type="" style="width:100%;" @click.native.prevent="changeTo('Forgot')">{{ $t('login.forgotPassword') }}</el-button>
 
-      <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
-      <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
+        <div class="tips" style="margin-top:30px"/>
+        <el-button v-if="settings.allowRegister && activeName=='Login'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
+        <el-button v-if="activeName=='Register'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+        <el-button :loading="loading" type="primary" style="display:none;width:30%;margin-bottom:30px;float: right;" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
 
-      <div class="tips">
-        <br>
-      </div>
-      <div class="tips">
-        <br>
-      </div>
-      <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:40%;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
-      <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:40%;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
-      <el-button :loading="loading" type="primary" style="display:none;width:30%;margin-bottom:30px;float: right;" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
-    </el-form>
+      </el-form>
+
+      <el-form v-if="activeName=='Forgot'" ref="loginForm" :model="loginForm" :rules="forgetPasswordRules" class="login-form" auto-complete="on" label-position="left">
+        <div class="title-container">
+          <h3 class="title">{{ $t('login.titleForgetPassword') }}</h3>
+          <lang-select class="set-language"/>
+        </div>
+
+        <el-form-item prop="username">
+          <span class="svg-container svg-container_login">
+            <svg-icon icon-class="user" />
+          </span>
+          <el-input
+            v-model="loginForm.username"
+            :placeholder="$t('login.username')"
+            name="username"
+            type="text"
+            auto-complete="on"
+          />
+        </el-form-item>
+
+        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:10px;" @click.native.prevent="changeTo('Forgot')">{{ $t('login.forgotPassword') }}</el-button>
+
+        <div class="tips"/>
+        <el-button v-if="settings.allowRegister" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
+        <el-button :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: right;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+
+      </el-form>
+    </div>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog" append-to-body>
       {{ $t('login.thirdpartyTips') }}
@@ -98,10 +137,36 @@ export default {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
+      forgetPasswordRules: {
+        username: [{ required: true, trigger: 'blur', validator: validateUsername }]
+      },
       passwordType: 'password',
       loading: false,
       showDialog: false,
       redirect: undefined
+    }
+  },
+  computed: {
+    settings: function() {
+      if (this.$store.getters.settings) {
+        return this.$store.getters.settings
+      }
+      return {}
+    },
+    getStackUrl() {
+      if (this.isMissingEntry) {
+        return this.$store.getters.settings.stackUrl
+      }
+      return '/'
+    },
+    isMissingEntry() {
+      console.error('missing a')
+      if (this.$store && this.$store.getters && this.$store.getters.settings) {
+        console.error('missing b')
+        return this.$store.getters.settings.missingSiteEntry === true
+      }
+      console.error('missing c')
+      return false
     }
   },
   watch: {
@@ -238,11 +303,15 @@ $bg:#2d3a4b;
 $dark_gray:#889aa4;
 $light_gray:#eee;
 
+$break-small: 320px;
+$break-large: 700px;
+
 .el-button+.el-button {
     margin-left: 0px;
 }
 
 .login-container {
+  overflow: auto;
   position: fixed;
   height: 100%;
   width: 100%;
@@ -285,6 +354,12 @@ $light_gray:#eee;
       text-align: center;
       font-weight: bold;
     }
+    .titleFirstTime {
+      color: $light_gray;
+      margin: 0px auto 10px auto;
+      text-align: center;
+      font-weight: bold;
+    }
     .set-language {
       color: #fff;
       position: absolute;
@@ -307,4 +382,13 @@ $light_gray:#eee;
     bottom: 28px;
   }
 }
+
+@media screen and (max-width: $break-large) {
+  .login-container {
+    .login-form {
+      margin: 10px auto;
+    }
+  }
+}
+
 </style>
