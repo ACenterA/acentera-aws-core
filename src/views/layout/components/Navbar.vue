@@ -1,8 +1,8 @@
 <template>
   <div class="navbar">
-    <hamburger :toggle-click="toggleSideBar" :is-active="sidebar.opened" class="hamburger-container"/>
+    <hamburger :toggle-click="toggleSideBar" :is-hidden="!sidebar.visible" :is-active="sidebar.opened" class="hamburger-container"/>
 
-    <breadcrumb class="breadcrumb-container"/>
+    <!-- breadcrumb class="breadcrumb-container" -->
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
@@ -18,9 +18,11 @@
 
         <lang-select class="international right-menu-item"/>
 
-        <el-tooltip :content="$t('navbar.theme')" effect="dark" placement="bottom">
-          <theme-picker class="theme-switch right-menu-item"/>
-        </el-tooltip>
+        <!--
+          <el-tooltip :content="$t('navbar.theme')" effect="dark" placement="bottom">
+            <theme-picker class="theme-switch right-menu-item"/>
+            </el-tooltip>
+        -->
       </template>
 
       <el-dropdown class="avatar-container right-menu-item" trigger="click">

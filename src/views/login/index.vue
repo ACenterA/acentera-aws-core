@@ -1,5 +1,6 @@
 <template>
   <div class="login-container">
+    wtf:: {{ settings }}
     <div v-if="isMissingEntry">
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
@@ -9,6 +10,7 @@
         </div>
       </el-form>
     </div>
+
     <div v-else>
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
@@ -19,7 +21,7 @@
         <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
           <h5 class="titleFirstTime">{{ $t('login.firstTime') }}</h5>
           <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
-          <a :href="getStackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
+          <a :href="settings.stackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
         </div>
 
         <el-form-item prop="username">
@@ -152,12 +154,6 @@ export default {
         return this.$store.getters.settings
       }
       return {}
-    },
-    getStackUrl() {
-      if (this.isMissingEntry) {
-        return this.$store.getters.settings.stackUrl
-      }
-      return '/'
     },
     isMissingEntry() {
       console.error('missing a')

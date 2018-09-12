@@ -41,6 +41,9 @@ const cachedService = axios.create({
 })
 
 const configHandler = function(config) {
+  console.error('IN CONFIG HANDLER')
+  console.error('GET TOKEN IS ')
+  console.error(getToken())
   console.error(this)
   console.error(config)
   // Do something before request is sent
@@ -92,7 +95,7 @@ const handleSuccess = function(response) {
         location.reload()// In order to re-instantiate the vue-router object to avoid bugs
       })
     }
-    return Promise.reject('error')
+    return Promise.reject(response)
   }
   // response => {
   //   const res = response.data
@@ -124,6 +127,7 @@ const handleSuccess = function(response) {
 const handleError = function(error) {
   // For LogOut someone might already have remoed this session ...
   // Also sessions does auto-expires if left over on the server side or on password / role changes
+  console.error('promise reject of ?')
   if (error.response.config.url.endsWith('/login/logout')) {
     if (error.response.status === 401) {
       return Promise.resolve()
@@ -133,14 +137,19 @@ const handleError = function(error) {
 }
 
 cachedService.interceptors.request.use(
-  config => configHandler(config),
+  config => configHandler(config)
+)
+cachedService.interceptors.response.use(
   response => handleSuccess(response),
   error => handleError(error)
 )
 
 // response interceptor
+service.interceptors.request.use(
+  config => configHandler(config)
+)
+
 service.interceptors.response.use(
-  config => configHandler(config),
   response => handleSuccess(response),
   error => handleError(error)
 )

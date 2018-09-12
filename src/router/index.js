@@ -7,10 +7,10 @@ Vue.use(Router)
 import Layout from '@/views/layout/Layout'
 
 /* Router Modules */
-import componentsRouter from './modules/components'
-import chartsRouter from './modules/charts'
-import tableRouter from './modules/table'
-import nestedRouter from './modules/nested'
+// import componentsRouter from './modules/components'
+// import chartsRouter from './modules/charts'
+// import tableRouter from './modules/table'
+// import nestedRouter from './modules/nested'
 
 /** note: Submenu only appear when children.length>=1
  *  detail see  https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -26,7 +26,7 @@ import nestedRouter from './modules/nested'
 * meta : {
     roles: ['admin','editor']     will control the page roles (you can set multiple roles)
     title: 'title'               the name show in submenu and breadcrumb (recommend set)
-    icon: 'svg-name'             the icon show in the sidebar,
+    icon: 'svg-name'             the icon show in the sidebar,ditor's Dashboard
     noCache: true                if true ,the page will no be cached(default is false)
   }
 **/
@@ -71,10 +71,13 @@ export const constantRouterMap = [
         path: 'dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: 'dashboard', icon: 'dashboard', noCache: true }
+        meta: {
+          title: 'dashboard', icon: 'dashboard', noCache: true
+        }
       }
     ]
-  },
+  }
+  /*
   {
     path: '/documentation',
     component: Layout,
@@ -84,7 +87,9 @@ export const constantRouterMap = [
         path: 'index',
         component: () => import('@/views/documentation/index'),
         name: 'Documentation',
-        meta: { title: 'documentation', icon: 'documentation', noCache: true }
+        meta: {
+          title: 'documentation', icon: 'documentation', noCache: true,
+        }
       }
     ]
   },
@@ -101,6 +106,7 @@ export const constantRouterMap = [
       }
     ]
   }
+  */
 ]
 
 export default new Router({
@@ -111,6 +117,7 @@ export default new Router({
 
 // admin is always added to all routes (see the async filtering... in store/module/permissions.js
 export const asyncRouterMap = [
+  /*
   {
     path: '/permission',
     component: Layout,
@@ -156,11 +163,11 @@ export const asyncRouterMap = [
     ]
   },
 
-  /** When your routing table is too long, you can split it into small modules**/
-  componentsRouter,
-  chartsRouter,
-  nestedRouter,
-  tableRouter,
+  // When your routing table is too long, you can split it into small modules
+  // componentsRouter,
+  // chartsRouter,
+  // nestedRouter,
+  // tableRouter,
 
   {
     path: '/example',
@@ -344,6 +351,7 @@ export const asyncRouterMap = [
       }
     ]
   },
+  */
 
   { path: '*', redirect: '/404', hidden: true }
 ]

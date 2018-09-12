@@ -6,6 +6,9 @@
     margin-left: 180px;
     position: relative;
   }
+  .main-container.hiddenSidebar {
+    margin-left: 0px;
+  }
   // 侧边栏
   .sidebar-container {
     transition: width 0.28s;
@@ -54,6 +57,9 @@
     }
     .main-container {
       margin-left: 36px;
+    }
+    .main-container.hiddenSidebar {
+      margin-left: 0px;
     }
     .submenu-title-noDropdown {
       padding-left: 10px !important;

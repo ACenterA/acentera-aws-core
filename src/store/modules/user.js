@@ -103,7 +103,7 @@ const user = {
           const data = response.data
           console.error('SET TOKEN OF....' + data.token)
           commit('SET_TOKEN', data.token)
-          setToken(response.data.token)
+          setToken(data.token)
           const newRefreshTime = Math.round(new Date().getTime() / 1000)
           commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
           setTokenLastRefresh(newRefreshTime)

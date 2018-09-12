@@ -12,6 +12,9 @@ export function loginByUsername(username, password) {
     data
   }).catch(error => {
     try {
+      console.error('got error here ')
+      console.error(error)
+      console.error(error.response)
       if (error.response.status === 401) {
         Message({
           message: window.app.$t('login.invalidPassword'),

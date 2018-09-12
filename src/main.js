@@ -1,4 +1,14 @@
 import Vue from 'vue'
+const fixConsoleLog = {
+  log: function() {
+
+  },
+  error: function() {
+
+  }
+}
+
+window.console = window.console || fixConsoleLog
 
 import Cookies from 'js-cookie'
 

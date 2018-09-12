@@ -2,9 +2,9 @@
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar class="sidebar-container"/>
-    <div class="main-container">
+    <div :class="mainContainerClassObj" class="main-container">
       <navbar/>
-      <tags-view/>
+      <!--<tags-view/>-->
       <app-main/>
     </div>
   </div>
@@ -32,10 +32,16 @@ export default {
     },
     classObj() {
       return {
+        hiddenSidebar: !this.sidebar.visible,
         hideSidebar: !this.sidebar.opened,
         openSidebar: this.sidebar.opened,
         withoutAnimation: this.sidebar.withoutAnimation,
         mobile: this.device === 'mobile'
+      }
+    },
+    mainContainerClassObj() {
+      return {
+        hiddenSidebar: !this.sidebar.visible
       }
     }
   },

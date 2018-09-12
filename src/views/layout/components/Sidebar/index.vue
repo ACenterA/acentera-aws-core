@@ -1,6 +1,7 @@
 <template>
-  <el-scrollbar wrap-class="scrollbar-wrapper">
+  <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper">
     <el-menu
+      :hidden="isHidden"
       :show-timeout="200"
       :default-active="$route.path"
       :collapse="isCollapse"
@@ -27,6 +28,9 @@ export default {
     ]),
     isCollapse() {
       return !this.sidebar.opened
+    },
+    isHidden() {
+      return !this.sidebar.visible
     }
   }
 }

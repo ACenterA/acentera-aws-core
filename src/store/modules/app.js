@@ -4,6 +4,7 @@ const app = {
   state: {
     sidebar: {
       opened: !+Cookies.get('sidebarStatus'),
+      visible: false,
       withoutAnimation: false
     },
     device: 'desktop',
@@ -24,6 +25,16 @@ const app = {
     CLOSE_SIDEBAR: (state, withoutAnimation) => {
       Cookies.set('sidebarStatus', 1)
       state.sidebar.opened = false
+      state.sidebar.withoutAnimation = withoutAnimation
+    },
+    SHOW_SIDEBAR: (state, withoutAnimation) => {
+      Cookies.set('sidebarStatus', 1)
+      state.sidebar.visible = true
+      state.sidebar.withoutAnimation = withoutAnimation
+    },
+    HIDE_SIDEBAR: (state, withoutAnimation) => {
+      Cookies.set('sidebarStatus', 1)
+      state.sidebar.visible = true
       state.sidebar.withoutAnimation = withoutAnimation
     },
     TOGGLE_DEVICE: (state, device) => {

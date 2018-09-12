@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{'is-hidden':isHidden}">
     <svg
       :class="{'is-active':isActive}"
       t="1492500959545"
@@ -30,6 +30,10 @@
 export default {
   name: 'Hamburger',
   props: {
+    isHidden: {
+      type: Boolean,
+      default: false
+    },
     isActive: {
       type: Boolean,
       default: false
