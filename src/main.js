@@ -23,6 +23,11 @@ import App from './App'
 import router from './router'
 import store from './store'
 
+//global registration
+import VueFormWizard from 'vue-form-wizard'
+import 'vue-form-wizard/dist/vue-form-wizard.min.css'
+Vue.use(VueFormWizard)
+
 import i18n from './lang' // Internationalization
 import './icons' // icon
 import './errorLog' // error log

@@ -7,16 +7,22 @@ const TokenLastRefreshKey = 'TokenRefresh'
 const AdminTokenKey = 'Admin-Token'
 
 export function getToken() {
+  // If we would like t do a multi esssion for the same user in different window ?
+  /*
   if (store && store.getters && store.getters.token) {
     return store.getters.token
   }
+  */
   return Cookies.get(TokenKey)
 }
 
 export function getTokenLastRefresh() {
+  // If we would like t do a multi esssion for the same user in different window ?
+  /*
   if (store && store.getters && store.getters.lastTokenRefresh) {
     return store.getters.lastTokenRefresh
   }
+  */
   return Cookies.get(TokenLastRefreshKey)
 }
 

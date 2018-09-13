@@ -18,6 +18,7 @@ const whiteList = [
   '/login',
   '/auth-redirect',
   '/error/no_api_access',
+  '/passwordreset',
   '/401',
   '/404'
 ] // no redirect whitelist
@@ -26,7 +27,13 @@ router.beforeEach((to, from, next) => {
   NProgress.start() // start progress bar
   console.error('received to path')
   console.error(to.path)
-  if (to.path.startsWith('/error/') || to.path.startsWith('/4') || to.path === '/error/no_api_access' || to.path === '/error/no_api_access_error') {
+  if (
+    to.path.startsWith('/error/') ||
+    to.path.startsWith('/4') ||
+    to.path === '/error/no_api_access' ||
+    to.path === '/error/no_api_access_error' ||
+    to.path.startsWith('/public/')
+  ) {
     // TODO: Make sure the GenerateRoutes always add at least 1 route?
     if (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0)) {
       store.dispatch('GenerateRoutes', { }).then(() => { // 根据roles权限生成可访问的路由表
@@ -68,7 +75,7 @@ router.beforeEach((to, from, next) => {
         }
       } else {
         /* has no token*/
-        if (whiteList.indexOf(to.path) !== -1) { // 在免登录白名单，直接进入
+        if (whiteList.indexOf(to.path) !== -1 || to.path.startsWith('/public/')) {
           next()
         } else {
           next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页

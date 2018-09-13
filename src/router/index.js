@@ -58,6 +58,11 @@ export const constantRouterMap = [
     hidden: true
   },
   {
+    path: '/passwordreset',
+    component: () => import('@/views/login/passwordreset'),
+    hidden: true
+  },
+  {
     path: '/error/no_api_access',
     component: () => import('@/views/errorPage/api_down'),
     hidden: true

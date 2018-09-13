@@ -30,6 +30,20 @@ export function loginByUsername(username, password) {
   })
 }
 
+export function userLoginUpdatePassword(token, password, passwordConfirm, code) {
+  const data = {
+    token,
+    password,
+    passwordConfirm,
+    code
+  }
+  return request({
+    url: '/login/password/reset/confirm',
+    method: 'post',
+    data
+  })
+}
+
 export function registerFirstAdmin(username, password) {
   const data = {
     username,
@@ -37,6 +51,18 @@ export function registerFirstAdmin(username, password) {
   }
   return request({
     url: '/login/admin',
+    method: 'post',
+    data
+  })
+}
+
+export function loginForgotPassword(username, code) {
+  const data = {
+    username,
+    code
+  }
+  return request({
+    url: '/login/password/reset',
     method: 'post',
     data
   })

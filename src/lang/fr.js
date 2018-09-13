@@ -75,13 +75,17 @@ export default {
     switchSuccess: 'Changement de langue complété avec succès'
   },
   login: {
+    passwordResetTitle: 'Modifier votre mot de passe',
+    passwordResetExpired: 'Votre demande est expiré ou est invalide',
     siteConfigError: 'Il y a une erreur de configuration. Le site ne peut pas être configuré. Veuillez contacter le support a l\'addresse suivante support@acentera.com',
     title: 'Connexion à Mon Espace',
     adminCreated: 'Votre nouveau compte d\'administration est maintenant prêt. Vous pouvez maintenant vous connecter',
     registerFirst: 'Créer votre premier compte admin',
     registerFirstNote: 'Ce nouveau compte remplacera le compte existant',
+    forgotPasswordEmail: 'Un courriel a été envoyé a l\'addresse spécifié',
     logIn: 'Se connecter',
     signUp: 'Créer mon compte',
+    Successfully: 'Vous vous êtes conntecté a votre compte avec succèss',
     forgotPassword: 'Mot de passe oublié ?',
     firstTime: 'Pour configurer et créer votre utilisateur veuillez utiliser admin@acentera.com',
     passwordOutput: 'Le mot de passe se retrouve dans les \'sorties\' du template créer.',
@@ -92,6 +96,9 @@ export default {
     UsernameEmailRequirements: 'Le nom d\'utilisateur doit être un addresse courriel valide.',
     username: 'Mon addresse courriel',
     password: 'Mon mot de passe',
+    passwordConfirm: 'Confirmez le mot de passe',
+    updatePassword: 'Modifier mon mot de passe',
+    passwordResetSuccessfully: 'Votre mot de passe a été modifier avec succèss',
     any: 'any',
     thirdparty: 'Se connecter avec ...',
     thirdpartyTips: 'Can not be simulated on local, so please combine you own business simulation! ! !'

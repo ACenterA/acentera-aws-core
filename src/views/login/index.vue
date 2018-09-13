@@ -9,7 +9,6 @@
         </div>
       </el-form>
     </div>
-
     <div v-else>
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
@@ -82,7 +81,7 @@
           />
         </el-form-item>
 
-        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:10px;" @click.native.prevent="changeTo('Forgot')">{{ $t('login.forgotPassword') }}</el-button>
+        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:10px;" @click.native.prevent="handleForgotPassword">{{ $t('login.forgotPassword') }}</el-button>
 
         <div class="tips"/>
         <el-button v-if="settings.allowRegister" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
@@ -130,6 +129,11 @@ export default {
     return {
       activeName,
       loginForm: {
+        username: null,
+        password: null,
+        code: null
+      },
+      loginFormReset: {
         username: null,
         password: null,
         code: null
@@ -190,13 +194,17 @@ export default {
     changeTo(tab) {
       this.activeName = tab
     },
+    resetForm() {
+      this.loginForm = this.loginFormReset
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
           this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
-            this.loading = false
+            this.resetForm()
             this.$router.push({ path: this.redirect || '/' })
+            // this.loading = false
           }).catch(() => {
             this.loading = false
           })
@@ -212,13 +220,30 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('RegisterByUsernameCode', this.loginForm).then(() => {
+            this.resetForm()
+            this.changeTo('Login')
             this.loading = false
-            this.$router.push({ path: this.redirect || '/' })
           }).catch(() => {
             this.loading = false
           })
         } else {
-          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+
+    handleForgotPassword() {
+      this.$refs.loginForm.validate(valid => {
+        if (valid) {
+          this.loading = true
+          this.$store.dispatch('LoginForgotPassword', this.loginForm).then(() => {
+            this.resetForm()
+            this.changeTo('Login')
+            this.loading = false
+          }).catch(() => {
+            this.loading = false
+          })
+        } else {
           return false
         }
       })

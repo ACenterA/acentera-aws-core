@@ -34,6 +34,11 @@ const settings = {
     }
   },
   actions: {
+    loginDisableFirstTime({ commit, state }, input) {
+      commit('SET_FIRST_TIME', false)
+      // TODO: Should we save the cookie ?
+      setSettingsToken(state)
+    },
     UpdateSiteSettings({ commit, state }, input) {
       var data = input.data || input
       console.error('receieved update site stettings')

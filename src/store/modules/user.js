@@ -1,4 +1,4 @@
-import { registerFirstAdmin, registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
+import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
 import router from '@/router'
 
 // TODO: Move request into api/user file
@@ -89,6 +89,19 @@ const user = {
 
   actions: {
     // 用户名登录
+    UserLoginUpdatePassword({ commit }, userInfo) {
+      return new Promise((resolve, reject) => {
+        userLoginUpdatePassword(userInfo.token, userInfo.password, userInfo.passwordConfirm, userInfo.code).then(response => {
+          window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
+          store.dispatch('LogOut').then(() => {
+            router.push({ path: '/login', replace: true, query: { noGoBack: false }})
+          })
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
     UpdateRefreshTime({ commit }, newRefreshTime) {
       return new Promise((resolve, reject) => {
         // Store tokenRefreshTime inside a cookie ...
@@ -104,15 +117,30 @@ const user = {
           console.error('OK GOT REGISTER FIRST ADMIN A')
           console.error(response)
           window.app.$message({ message: window.app.$t('login.adminCreated'), type: 'success' })
-
           store.dispatch('LogOut').then(() => {
             // location.reload()// In order to re-instantiate the vue-router object to avoid bugs
-            router.push({ path: '/login', replace: true, query: { noGoBack: false }})
+            store.dispatch('loginDisableFirstTime').then(() => {
+              router.push({ path: '/login', replace: true, query: { noGoBack: false }})
+            })
           })
           resolve()
         }).catch(error => {
           console.error('OK GOT REGISTER FIRST ERRR ')
           console.error(error)
+          reject(error)
+        })
+      })
+    },
+
+    LoginForgotPassword({ commit }, userInfo) {
+      const username = userInfo.username.trim()
+      return new Promise((resolve, reject) => {
+        loginForgotPassword(username, userInfo.code).then(response => {
+          console.error('received ')
+          console.error(response)
+          window.app.$message({ message: window.app.$t('login.forgotPasswordEmail'), type: 'success' })
+          resolve()
+        }).catch(error => {
           reject(error)
         })
       })
@@ -140,6 +168,7 @@ const user = {
       const username = userInfo.username.trim()
       return new Promise((resolve, reject) => {
         loginByUsername(username, userInfo.password).then(response => {
+          window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
           const data = response.data
           console.error('SET TOKEN OF....' + data.token)
           commit('SET_TOKEN', data.token)

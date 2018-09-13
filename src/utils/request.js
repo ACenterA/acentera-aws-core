@@ -70,7 +70,6 @@ const configHandler = function(config) {
     var lastTokenRefresh = getTokenLastRefresh()
     if (Math.abs(currentTime - lastTokenRefresh) >= 300) {
       store.dispatch('UpdateRefreshTime', currentTime).then(() => {
-        // store.commit('SET_LAST_TOKEN_REFRESH', currentTime)
         if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
           return refreshToken(config)
         }
