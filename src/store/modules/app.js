@@ -28,13 +28,14 @@ const app = {
       state.sidebar.withoutAnimation = withoutAnimation
     },
     SHOW_SIDEBAR: (state, withoutAnimation) => {
-      Cookies.set('sidebarStatus', 1)
+      console.error('show sidebbar')
+      console.error('set state to visible..')
       state.sidebar.visible = true
       state.sidebar.withoutAnimation = withoutAnimation
     },
     HIDE_SIDEBAR: (state, withoutAnimation) => {
-      Cookies.set('sidebarStatus', 1)
-      state.sidebar.visible = true
+      console.error('hide sidebbar')
+      state.sidebar.visible = false
       state.sidebar.withoutAnimation = withoutAnimation
     },
     TOGGLE_DEVICE: (state, device) => {
@@ -64,6 +65,12 @@ const app = {
     },
     setSize({ commit }, size) {
       commit('SET_SIZE', size)
+    },
+    showSidebar({ commit }, sidebar) {
+      commit('SHOW_SIDEBAR', sidebar)
+    },
+    hideSidebar({ commit }, sidebar) {
+      commit('HIDE_SIDEBAR', sidebar)
     }
   }
 }

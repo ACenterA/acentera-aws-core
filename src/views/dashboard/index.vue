@@ -26,12 +26,15 @@ export default {
   },
   created() {
     if (this.roles.includes('FirstAdmin')) {
-      this.$store.dispatch('HIDE_SIDEBAR', true)
+      this.$store.dispatch('hideSidebar', true)
       this.currentRole = 'firstAdminDashboard'
     } else {
-      this.$store.dispatch('SHOW_SIDEBAR', true)
+      console.error('CALLING SHOW SIDEBAR')
+      this.$store.dispatch('showSidebar', true)
       if (!this.roles.includes('admin')) {
         this.currentRole = 'editorDashboard'
+      } else {
+        this.currentRole = 'adminDashboard'
       }
     }
   }

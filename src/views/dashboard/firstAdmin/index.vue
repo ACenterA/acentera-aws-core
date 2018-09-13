@@ -2,14 +2,12 @@
   <div class="login-container">
     <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
       <div class="title-container">
-        <h3 class="title">{{ $t('login.title') }}</h3>
+        <h3 class="title">{{ $t('login.registerFirst') }}</h3>
         <lang-select class="set-language"/>
       </div>
 
       <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
-        <h5 class="titleFirstTime">{{ $t('login.firstTime') }}</h5>
-        <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
-        <a :href="settings.stackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
+        <h4 class="titleFirstTime">{{ $t('login.registerFirstNote') }}</h4>
       </div>
 
       <el-form-item prop="username">
@@ -41,7 +39,7 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegisterFirst">{{ $t('login.signUp') }}</el-button>
 
     </el-form>
 
@@ -134,35 +132,18 @@ export default {
     changeTo(tab) {
       this.activeName = tab
     },
-    handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
-            this.loading = false
-            this.$router.push({ path: this.redirect || '/' })
-          }).catch(() => {
-            this.loading = false
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
 
-    handleRegister() {
+    handleRegisterFirst() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('RegisterByUsernameCode', this.loginForm).then(() => {
+          this.$store.dispatch('RegisterFirstUsername', this.loginForm).then(() => {
+            // Todo: perform logout
             this.loading = false
-            this.$router.push({ path: this.redirect || '/' })
           }).catch(() => {
             this.loading = false
           })
         } else {
-          console.log('error submit!!')
           return false
         }
       })

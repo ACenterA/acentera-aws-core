@@ -1,4 +1,5 @@
-import { registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
+import { registerFirstAdmin, registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
+import router from '@/router'
 
 // TODO: Move request into api/user file
 import request from '@/utils/request'
@@ -96,6 +97,27 @@ const user = {
         resolve()
       })
     },
+    RegisterFirstUsername({ commit }, userInfo) {
+      const username = userInfo.username.trim()
+      return new Promise((resolve, reject) => {
+        registerFirstAdmin(username, userInfo.password).then(response => {
+          console.error('OK GOT REGISTER FIRST ADMIN A')
+          console.error(response)
+          window.app.$message({ message: window.app.$t('login.adminCreated'), type: 'success' })
+
+          store.dispatch('LogOut').then(() => {
+            // location.reload()// In order to re-instantiate the vue-router object to avoid bugs
+            router.push({ path: '/login', replace: true, query: { noGoBack: false }})
+          })
+          resolve()
+        }).catch(error => {
+          console.error('OK GOT REGISTER FIRST ERRR ')
+          console.error(error)
+          reject(error)
+        })
+      })
+    },
+
     RegisterByUsernameCode({ commit }, userInfo) {
       const username = userInfo.username.trim()
       return new Promise((resolve, reject) => {

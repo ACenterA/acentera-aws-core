@@ -51,8 +51,10 @@ const settings = {
     GetSiteSettings({ commit, state }) {
       return new Promise((resolve, reject) => {
         var data = getSettingsToken()
+        var hasResolved = false
         if (data) {
           store.dispatch('UpdateSiteSettings', { data }).then(() => {
+            hasResolved = true
             resolve('resolve')
           })
         }
@@ -63,8 +65,14 @@ const settings = {
             // Save app Settings ...
             const data = response.data
             store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
-
+              if (!hasResolved) {
+                hasResolved = true
+                resolve('resolve fetch')
+              }
             })
+          }
+          if (!hasResolved) {
+            resolve('forced_no_internet_or_cookies')
           }
         })
         /*

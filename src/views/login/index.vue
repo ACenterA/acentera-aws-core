@@ -1,6 +1,5 @@
 <template>
   <div class="login-container">
-    wtf:: {{ settings }}
     <div v-if="isMissingEntry">
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">

@@ -77,7 +77,10 @@ export default {
   login: {
     siteConfigError: 'An error occured. The site cannot be configured. Please contact support at support@acentera.com',
     title: 'Login Form',
+    adminCreated: 'Account created successfully. You may now log in with your new account',
     logIn: 'Log in',
+    registerFirst: 'Create your first admin account',
+    registerFirstNote: 'The new admin account will replace the current existing account',
     signUp: 'Sign up',
     firstTime: 'Not yet configured, please login using admin@acentera.com',
     passwordOutput: 'The password can be found in the template \'outputs\'.',

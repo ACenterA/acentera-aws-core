@@ -58,6 +58,11 @@ export const constantRouterMap = [
     hidden: true
   },
   {
+    path: '/error/no_api_access',
+    component: () => import('@/views/errorPage/api_down'),
+    hidden: true
+  },
+  {
     path: '/401',
     component: () => import('@/views/errorPage/401'),
     hidden: true

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import localforage from 'localforage'
+import router from '@/router'
 import { setupCache } from 'axios-cache-adapter'
 
 // import { Message } from 'element-ui'
@@ -80,8 +81,11 @@ const configHandler = function(config) {
 }
 
 const handleSuccess = function(response) {
+  console.error('RECIEVED RESPONSE ')
   const res = response
-  if (res.status === 200 || res.status === 204) {
+  console.error(res)
+  console.error(res.status)
+  if (res.status >= 200 || res.status <= 204) { // 200, 201, 204 /// all good
     return response
   } else {
     // TODO: On 409, retry ?
@@ -124,16 +128,64 @@ const handleSuccess = function(response) {
   //     return response.data
   //   }
 }
-const handleError = function(error) {
+const handleError = function(error, test) {
   // For LogOut someone might already have remoed this session ...
   // Also sessions does auto-expires if left over on the server side or on password / role changes
   console.error('promise reject of ?')
-  if (error.response.config.url.endsWith('/login/logout')) {
-    if (error.response.status === 401) {
+  console.error(error)
+  console.error(test)
+  console.error(JSON.stringify(error))
+  var config = null
+  var resp = null
+
+  var err = {}
+
+  if (error) {
+    if (error.config) {
+      console.error('got error . config')
+      config = error.config
+    } else {
+      console.error('not got error . config')
+      if (error.response && error.response.config) {
+        config = error.response.config
+      }
+    }
+
+    if (error.response) {
+      console.error('got error . response')
+      resp = error.response
+    } else {
+      console.error('not got error . config')
+      if (error.response && error.response) {
+        resp = error.response
+      }
+    }
+
+    console.error('config is')
+    console.error(config)
+    console.error('RESP is')
+    console.error(resp)
+    err['config'] = config
+    err['response'] = resp
+  }
+  if (!err.config) {
+    err = error
+  }
+
+  if (config && config.url.endsWith('/login/logout')) {
+    if (resp.status === 401 || resp.status === 404) {
       return Promise.resolve()
     }
+  } else {
+    // API Is Down
+    if (!resp) {
+      console.error('RESOLVE A')
+      router.push({ path: '/error/no_api_access', replace: true, query: { noGoBack: false }})
+      return Promise.reject({ error: 'no_api_access' })
+    }
   }
-  return Promise.reject(error)
+  console.error('RESOLVE B')
+  return Promise.reject(err)
 }
 
 cachedService.interceptors.request.use(

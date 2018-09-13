@@ -30,6 +30,18 @@ export function loginByUsername(username, password) {
   })
 }
 
+export function registerFirstAdmin(username, password) {
+  const data = {
+    username,
+    password
+  }
+  return request({
+    url: '/login/admin',
+    method: 'post',
+    data
+  })
+}
+
 export function registerByUsernameCode(username, password, code) {
   const data = {
     username,

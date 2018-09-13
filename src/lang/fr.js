@@ -77,6 +77,9 @@ export default {
   login: {
     siteConfigError: 'Il y a une erreur de configuration. Le site ne peut pas être configuré. Veuillez contacter le support a l\'addresse suivante support@acentera.com',
     title: 'Connexion à Mon Espace',
+    adminCreated: 'Votre nouveau compte d\'administration est maintenant prêt. Vous pouvez maintenant vous connecter',
+    registerFirst: 'Créer votre premier compte admin',
+    registerFirstNote: 'Ce nouveau compte remplacera le compte existant',
     logIn: 'Se connecter',
     signUp: 'Créer mon compte',
     forgotPassword: 'Mot de passe oublié ?',
