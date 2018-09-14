@@ -16,6 +16,7 @@ import { getAdminToken, removeAdminToken, getToken, setToken, removeToken, setTo
 
 const logger = new Logger('store:auth')
 
+var cognitoUser = null
 export function changeUserRole(role, password) {
   const data = {
     role,
@@ -143,6 +144,13 @@ const user = {
         resolve()
       })
     },
+    UserPasswordChangeCancel({ commit }, userInfo) {
+      return new Promise((resolve, reject) => {
+        commit('SET_CODE', '')
+        commit('SET_COGNITO_USER', '')
+        resolve()
+      })
+    },
     UserPasswordChangeByCode({ commit }, userInfo) {
       // Cognito ?? by default
       return new Promise((resolve, reject) => {
@@ -158,32 +166,76 @@ const user = {
         })
       })
     },
-    UserPasswordChange({ commit }, userInfo) {
+    UserLoginConfirmByCode({ commit }, params) {
+      return new Promise((resolve, reject) => {
+        var code = params.code
+        var mfaType = params.mfaType
+        // var user = store.getters.isCognitoUser
+        // Somehow the getter doesnt have all the functions ?
+        Auth.confirmSignIn(cognitoUser, code, mfaType).then(user => {
+          cognitoUser = user
+          commit('SET_COGNITO_USER', user)
+          if (user && user.signInUserSession) {
+            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+          }
+          resolve()
+        }).catch(e => {
+          console.error('confirmSigninUser EE')
+          var Msg = window.app.$t('login.' + e.code)
+          if (e.message) {
+            Msg = Msg + '[' + e.message + ']'
+          }
+          console.error('confirmSigninUser FF')
+          window.app.$message({ message: Msg, type: 'error' })
+          console.log(e)
+          reject(e)
+        })
+      })
+    },
+    UserPasswordChange({ commit }, params) {
+      const userInfo = params.password
+      const reqAttr = params.attributes
       if (store.getters.isCognitoUser) {
         return new Promise((resolve, reject) => {
           const currentUsername = this.getters.getCognitoUser.username
-          Auth.signIn(currentUsername, userInfo.password).then(function(a) {
-            Auth.completeNewPassword(this.getters.getCognitoUser, userInfo.password, { name: 'Francis LL' }).then(user => {
-              commit('SET_COGNITO_USER', user)
-              console.error('will login')
+          Auth.signIn(currentUsername, userInfo.oldPassword).then(function(a) {
+            console.error('GOT SIGNING')
+            console.error('Calling complete new Pwd')
+            cognitoUser = a
+            Auth.completeNewPassword(a, userInfo.password, reqAttr).then(user => {
+              console.error('ok auth complted a')
               console.error(user)
+              commit('SET_COGNITO_USER', user)
+              console.error('ok auth complted updating')
+              cognitoUser = user
               store.dispatch('LoginByUsername', { username: currentUsername, password: userInfo.password }).then(f => {
                 console.error('will login 1')
                 console.log(user)
                 console.log(f)
                 resolve(user)
               }).catch(err => {
+                console.error('will login error')
                 console.error(err) // should not happend
                 reject(err)
               })
             }).catch(e => {
+              console.error('will login GOT ERR')
+              console.error(e)
               // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
-              window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+              var Msg = window.app.$t('login.' + e.code)
+              if (e.message) {
+                Msg = Msg + '[' + e.message + ']'
+              }
+              window.app.$message({ message: Msg, type: 'error' })
               console.log(e)
               reject(e)
             })
           }).catch(e => {
-            window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+            var Msg = window.app.$t('login.' + e.code)
+            if (e.message) {
+              Msg = Msg + '[' + e.message + ']'
+            }
+            window.app.$message({ message: Msg, type: 'error' })
             // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
             console.log(e)
             reject(e)
@@ -356,9 +408,12 @@ const user = {
       if (store.getters.isCognitoUser) {
         return new Promise((resolve, reject) => {
           Auth.signIn(username, userInfo.password).then(function(a) {
-            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+            // Ok cognito User now have a Session so we are good
+            if (a && a.signInUserSession) {
+              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+            }
             commit('SET_COGNITO_USER', a)
-
+            cognitoUser = a
             // TODO: Create a session with the UserId / Cognito User validation
             // commit('SET_TOKEN', 'cognitoUser')
             // setToken('cognitoUser')

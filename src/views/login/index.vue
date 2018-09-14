@@ -57,68 +57,111 @@
     </div>
 
     <div v-if="!isLoginCodeReset && getCognitoUser">
-      <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
+      <div v-if="getCognitoUser.signInUserSession">
         <div class="title-container">
-          <h3 class="title">{{ $t('login.passwordChangeTitle') }}</h3>
-          <lang-select class="set-language"/>
+          <h3 class="title">{{ $t('login.loggedInSuccesfully') }}</h3>
         </div>
+      </div>
+      <div v-if="!getCognitoUser.signInUserSession">
+        <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
+          <div v-if="!getCognitoUser.signInUserSession && getCognitoUser.challengeName == 'SMS_MFA'">
+            <div class="title-container">
+              <h3 class="title">{{ $t('login.mfaTitleSms') }}</h3>
+              <lang-select class="set-language"/>
+            </div>
 
-        <div v-if="getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED'">
+            <el-form-item prop="code">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
+              <el-input
+                :type="text"
+                v-model="codeConfirm.code"
+                :placeholder="$t('login.code')"
+                name="code"
+                auto-complete="on"
+                @keyup.enter.native="handleCodeConfirmation" />
+            </el-form-item>
 
-          <el-form-item prop="oldPassword">
-            <span class="svg-container">
-              <svg-icon icon-class="password" />
-            </span>
+            <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCodeConfirmation">{{ $t('login.validateCode') }}</el-button>
+            <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
+          </div>
 
-            <el-input
-              :type="passwordType"
-              v-model="passwordChangeForm.oldPassword"
-              :placeholder="$t('login.oldPassword')"
-              name="password"
-              auto-complete="on"
-              @keyup.enter.native="handlePasswordChange" />
-            <span class="show-pwd" @click="showPwd">
-              <svg-icon icon-class="eye" />
-            </span>
-          </el-form-item>
+          <div v-if="getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED'">
+            <div class="title-container">
+              <h3 class="title">{{ $t('login.passwordChangeTitle') }}</h3>
+              <lang-select class="set-language"/>
+            </div>
 
-          <el-form-item prop="password">
-            <span class="svg-container">
-              <svg-icon icon-class="password" />
-            </span>
-            <el-input
-              :type="passwordType"
-              v-model="passwordChangeForm.password"
-              :placeholder="$t('login.password')"
-              name="password"
-              auto-complete="on"
-              @keyup.enter.native="handlePasswordChange" />
-            <span class="show-pwd" @click="showPwd">
-              <svg-icon icon-class="eye" />
-            </span>
-          </el-form-item>
+            <el-form-item prop="oldPassword">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
 
-          <el-form-item prop="passwordConfirm">
-            <span class="svg-container">
-              <svg-icon icon-class="password" />
-            </span>
-            <el-input
-              :type="passwordType"
-              v-model="passwordChangeForm.passwordConfirm"
-              :placeholder="$t('login.passwordConfirm')"
-              name="password"
-              auto-complete="on"
-              @keyup.enter.native="handlePasswordChange" />
-            <span class="show-pwd" @click="showPwd">
-              <svg-icon icon-class="eye" />
-            </span>
-          </el-form-item>
+              <el-input
+                :type="passwordType"
+                v-model="passwordChangeForm.oldPassword"
+                :placeholder="$t('login.oldPassword')"
+                name="password"
+                auto-complete="on"
+                @keyup.enter.native="handlePasswordChange" />
+              <span class="show-pwd" @click="showPwd">
+                <svg-icon icon-class="eye" />
+              </span>
+            </el-form-item>
 
-          <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChange">{{ $t('login.updatePassword') }}</el-button>
+            <el-form-item prop="password">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
+              <el-input
+                :type="passwordType"
+                v-model="passwordChangeForm.password"
+                :placeholder="$t('login.password')"
+                name="password"
+                auto-complete="on"
+                @keyup.enter.native="handlePasswordChange" />
+              <span class="show-pwd" @click="showPwd">
+                <svg-icon icon-class="eye" />
+              </span>
+            </el-form-item>
 
-        </div>
+            <el-form-item prop="passwordConfirm">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
+              <el-input
+                :type="passwordType"
+                v-model="passwordChangeForm.passwordConfirm"
+                :placeholder="$t('login.passwordConfirm')"
+                name="password"
+                auto-complete="on"
+                @keyup.enter.native="handlePasswordChange" />
+              <span class="show-pwd" @click="showPwd">
+                <svg-icon icon-class="eye" />
+              </span>
+            </el-form-item>
 
-      </el-form>
+            <el-form-item v-for="(v, index) in getChallengeParam" :key="v" prop=":v">
+              <span class="svg-container"/>
+              <el-input
+                :idx="index"
+                :type="text"
+                v-model="requiredAttributes[v]"
+                :value="requiredAttributes[v]"
+                :placeholder="v"
+                auto-complete="on"
+                name="v"
+                @keyup.enter.native="handlePasswordChange" />
+            </el-form-item>
+
+            <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChange">{{ $t('login.updatePassword') }}</el-button>
+            <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
+
+          </div>
+
+        </el-form>
+      </div>
     </div>
     <div v-if="!isLoginCodeReset && !getCognitoUser">
       <div v-if="isMissingEntry">
@@ -258,6 +301,8 @@ export default {
         password: null,
         code: null
       },
+      requiredAttributes: {
+      },
       loginForm: {
         username: null,
         password: null,
@@ -292,6 +337,10 @@ export default {
   },
   computed: {
     ...mapGetters(['getCognitoUser', 'isLoginCodeReset']),
+    getChallengeParam: function() {
+      var reqAtt = this.getCognitoUser.challengeParam.requiredAttributes || []
+      return this.updateRequiredAttributes(reqAtt)
+    },
     isCognitoConfigured: function() {
       try {
         if (this.$store && this.$store.getters && this.$store.getters.settings) {
@@ -333,6 +382,13 @@ export default {
     // window.removeEventListener('hashchange', this.afterQRScan)
   },
   methods: {
+    updateRequiredAttributes: function(reqAtt) {
+      var i = reqAtt.length
+      for (var z = 0; z < i; z++) {
+        this.requiredAttributes['' + reqAtt[z]] = ''
+      }
+      return reqAtt
+    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -361,6 +417,23 @@ export default {
         this.loading = false
       })
     },
+    handleCodeConfirmation() {
+      this.loading = true
+      var mfa = {
+        code: this.codeConfirm.code,
+        mfaType: this.getCognitoUser.challengeName
+      }
+      this.$store.dispatch('UserLoginConfirmByCode', mfa).then(() => {
+        this.resetForm()
+        this.$router.push({ path: this.redirect || '/' })
+        var self = this
+        setTimeout(function() {
+          self.loading = false
+        }, 2000)
+      }).catch(() => {
+        this.loading = false
+      })
+    },
     handleCodeConfirmChange() {
       this.$refs.codeConfirm.validate(valid => {
         if (valid) {
@@ -382,11 +455,28 @@ export default {
         }
       })
     },
+    handlePasswordChangeCancel() {
+      this.loading = true
+      this.$store.dispatch('UserPasswordChangeCancel').then(() => {
+        this.resetForm()
+        this.loginForm['username'] = ''
+        this.$router.push({ path: this.redirect || '/' })
+        var self = this
+        setTimeout(function() {
+          self.loading = false
+        }, 2000)
+      }).catch(() => {
+        this.loading = false
+      })
+    },
     handlePasswordChange() {
       this.$refs.passwordChangeForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('UserPasswordChange', this.passwordChangeForm).then(() => {
+          console.error('sending passwrdo fhagne')
+          console.error(this.passwordChangeForm)
+          console.error(this.requiredAttributes)
+          this.$store.dispatch('UserPasswordChange', { password: this.passwordChangeForm, attributes: this.requiredAttributes }).then(() => {
             this.resetForm()
             this.$router.push({ path: this.redirect || '/' })
             var self = this
