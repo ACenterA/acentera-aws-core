@@ -9,9 +9,24 @@ const settings = {
     mfaEnabled: false,
     firstTime: '',
     missingSiteEntry: false,
-    stackUrl: ''
+    stackUrl: '',
+    cognito: {
+      s3: {
+        REGION: 'YOUR_S3_UPLOADS_BUCKET_REGION',
+        BUCKET: 'YOUR_S3_UPLOADS_BUCKET_NAME'
+      },
+      apiGateway: {
+        REGION: 'YOUR_API_GATEWAY_REGION',
+        URL: 'YOUR_API_GATEWAY_URL'
+      },
+      cognito: {
+        REGION: 'us-east-1', // 'YOUR_COGNITO_REGION',
+        USER_POOL_ID: 'us-east-1_e7gsuxHHc', // 'YOUR_COGNITO_USER_POOL_ID',
+        APP_CLIENT_ID: 'uiqnrquee9d6domfk852rt05o', // 'YOUR_COGNITO_APP_CLIENT_ID',
+        IDENTITY_POOL_ID: 'us-east-1:c2ed8a93-adb8-4ca7-bf5c-6345ac170f0a' // 'YOUR_IDENTITY_POOL_ID'
+      }
+    }
   },
-
   mutations: {
     SET_RECAPCHA_KEY: (state, recaptchaKey) => {
       state.recaptchaKey = recaptchaKey
@@ -31,6 +46,52 @@ const settings = {
     },
     SET_STACK_URL: (state, stackUrl) => {
       state.stackUrl = stackUrl
+    },
+    SET_COGNITO: (state, cognito) => {
+      try {
+        state.cognito = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
+        console.error('got cognito a')
+        console.error(state.cognito)
+
+        if (!state.cognito.s3) {
+          state.cognito.s3 = {}
+        }
+
+        if (!state.cognito.cognito) {
+          state.cognito.cognito = {}
+        }
+
+        if (!state.cognito.apiGateway) {
+          state.cognito.apiGateway = {}
+        }
+
+        const config = state.cognito
+        window.Amplify.configure({
+          Auth: {
+            mandatorySignIn: true,
+            region: config.cognito.REGION,
+            userPoolId: config.cognito.USER_POOL_ID,
+            identityPoolId: config.cognito.IDENTITY_POOL_ID,
+            userPoolWebClientId: config.cognito.APP_CLIENT_ID
+          },
+          Storage: {
+            region: config.s3.REGION,
+            bucket: config.s3.BUCKET,
+            identityPoolId: config.cognito.IDENTITY_POOL_ID
+          },
+          API: {
+            endpoints: [
+              {
+                name: 'admin',
+                endpoint: config.apiGateway.URL,
+                region: config.apiGateway.REGION
+              }
+            ]
+          }
+        })
+      } catch (ex) {
+        console.error(ex.stack)
+      }
     }
   },
   actions: {
@@ -49,8 +110,9 @@ const settings = {
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
       commit('SET_STACK_URL', data.stackUrl)
-      console.error('recieved et site settings...BZZ')
-      console.error(data)
+
+      commit('SET_COGNITO', data.cognito)
+
       setSettingsToken(data)
     },
     GetSiteSettings({ commit, state }) {

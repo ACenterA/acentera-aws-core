@@ -1,5 +1,4 @@
 import request from '@/utils/request'
-import { Message } from 'element-ui'
 
 export function loginByUsername(username, password) {
   const data = {
@@ -10,23 +9,6 @@ export function loginByUsername(username, password) {
     url: '/login/login',
     method: 'post',
     data
-  }).catch(error => {
-    try {
-      console.error('got error here ')
-      console.error(error)
-      console.error(error.response)
-      if (error.response.status === 401) {
-        Message({
-          message: window.app.$t('login.invalidPassword'),
-          type: 'error',
-          duration: 5 * 1000
-        })
-      // } else {
-        // default error
-      }
-    } catch (ef) {
-      console.error(ef.stack)
-    }
   })
 }
 

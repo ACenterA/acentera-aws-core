@@ -34,6 +34,13 @@ import './errorLog' // error log
 import './permission' // permission control
 // do not import './mock' // simulation data
 
+// Import Amplify aws
+import Amplify from 'aws-amplify'
+// import aws_exports from '@/aws-exports'
+// Amplify.Logger.LOG_LEVEL = 'DEBUG' // to show detailed logs from Amplify library
+// Amplify.configure(aws_exports)
+window.Amplify = Amplify
+
 import * as filters from './filters' // global filters
 
 Vue.use(Element, {

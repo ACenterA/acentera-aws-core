@@ -17,6 +17,16 @@ const getters = {
   permission_routers: state => state.permission.routers,
   addRouters: state => state.permission.addRouters,
   errorLogs: state => state.errorLog.logs,
-  settings: state => state.settings
+  settings: state => state.settings,
+  isCognitoUser: state => {
+    try {
+      console.error(state)
+      if (state.settings) {
+        return !!state.settings.cognito.cognito.IDENTITY_POOL_ID
+      }
+    } catch (e) {
+      return false
+    }
+  }
 }
 export default getters

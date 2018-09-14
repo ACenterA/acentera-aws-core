@@ -1,13 +1,20 @@
 import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
 import router from '@/router'
+import { Auth, Logger } from 'aws-amplify'
 
 // TODO: Move request into api/user file
 import request from '@/utils/request'
 import Cookies from 'js-cookie'
 
 import store from '@/store'
-import { MessageBox } from 'element-ui' // Message
+import { MessageBox, Message } from 'element-ui' // Message
 import { getAdminToken, removeAdminToken, getToken, setToken, removeToken, setTokenLastRefresh } from '@/utils/auth'
+
+// import { AmazonCognitoIdentity, CognitoUserPool, CognitoUserAttribute, CognitoUser } from 'amazon-cognito-identity-js'
+// import { AmazonCognitoIdentity } from 'amazon-cognito-identity-js'
+// import { CognitoUse1r } from 'amazon-cognito-identity-js'
+
+const logger = new Logger('store:auth')
 
 export function changeUserRole(role, password) {
   const data = {
@@ -36,7 +43,8 @@ const user = {
     roles: [], // List of available roles for this user
     setting: {
       articlePlatform: []
-    }
+    },
+    cognito: null
   },
 
   mutations: {
@@ -84,11 +92,175 @@ const user = {
       console.error('ROLES ARE:')
       console.error(state.roles)
       console.error(state.roles_active)
+    },
+    SET_COGNITO_USER: (state, cognitoUser) => {
+      state.cognito = cognitoUser
+    }
+
+  },
+  getters: {
+    getCognitoUser(state) {
+      return state.cognito
+    },
+    isLoginCodeReset(state) {
+      if (state) {
+        return !!state.code
+      }
+      return false
     }
   },
-
   actions: {
-    // 用户名登录
+    awsSignIn: async(context, params) => {
+      logger.debug('signIn for {}', params.username)
+      context.commit('auth/clearAuthenticationStatus', null, { root: true })
+      try {
+        const user = await Auth.signIn(params.username, params.password)
+        context.commit('setUserAuthenticated', user)
+      } catch (err) {
+        context.commit('auth/setAuthenticationError', err, { root: true })
+      }
+    },
+    awsSignOut: async(context) => {
+      try {
+        await Auth.signOut()
+      } catch (err) {
+        logger.error('error during sign out: {}', err)
+      }
+      context.commit('auth/clearAuthentication', null, { root: true })
+    },
+    awsSignUp: async(context, params) => {
+      context.commit('auth/clearAuthenticationStatus', null, { root: true })
+      try {
+        await Auth.signUp(params)
+        context.commit('auth/clearAuthentication', null, { root: true })
+      } catch (err) {
+        context.commit('auth/setAuthenticationError', err, { root: true })
+      }
+    },
+    UserPasswordChangeByCodeCancel({ commit }, userInfo) {
+      return new Promise((resolve, reject) => {
+        commit('SET_CODE', '')
+        resolve()
+      })
+    },
+    UserPasswordChangeByCode({ commit }, userInfo) {
+      // Cognito ?? by default
+      return new Promise((resolve, reject) => {
+        Auth.forgotPasswordSubmit(userInfo.username, userInfo.code, userInfo.password).then(user => {
+          commit('SET_CODE', '')
+          window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
+          resolve(userInfo.username)
+        }).catch(err => {
+          console.error(err)
+          window.app.$message({ message: window.app.$t('login.' + err.code), type: 'error' })
+          // Who care if it doesn't exist
+          reject(err)
+        })
+      })
+    },
+    UserPasswordChange({ commit }, userInfo) {
+      if (store.getters.isCognitoUser) {
+        return new Promise((resolve, reject) => {
+          const currentUsername = this.getters.getCognitoUser.username
+          Auth.signIn(currentUsername, userInfo.password).then(function(a) {
+            Auth.completeNewPassword(this.getters.getCognitoUser, userInfo.password, { name: 'Francis LL' }).then(user => {
+              commit('SET_COGNITO_USER', user)
+              console.error('will login')
+              console.error(user)
+              store.dispatch('LoginByUsername', { username: currentUsername, password: userInfo.password }).then(f => {
+                console.error('will login 1')
+                console.log(user)
+                console.log(f)
+                resolve(user)
+              }).catch(err => {
+                console.error(err) // should not happend
+                reject(err)
+              })
+            }).catch(e => {
+              // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
+              window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+              console.log(e)
+              reject(e)
+            })
+          }).catch(e => {
+            window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+            // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
+            console.log(e)
+            reject(e)
+          })
+          /*
+          // var self = this
+          console.error('got test')
+          store.dispatch('authenticateUser', { email: 'support@acentera.com', password: '1Lovebeer!' }).then(f => {
+            console.error('got succc')
+            console.error(f)
+            // self['cognito'].actions.changePassword({ currentPassword: 'Hello', newPassword: 'World!' }).then(f => {
+            //   console.error(f)
+            // })
+          }).catch(err => {
+            console.error('got errr login')
+            console.error(err)
+            store.dispatch('forgotPassword', { email: this.getters.getCognitoUser.username }).then(f => { // )'1Lovebeer!', newPassword: '8Lovebeer!' }).then(f => {
+              console.error('got succc1 pw change')
+              console.error(f)
+            }).catch(err => {
+              console.error('err pw change')
+              console.error(err)
+            })
+          })
+          console.error(this.getters.getCognitoUser.storage)
+          var keyPrefix = 'CognitoIdentityServiceProvider.' + this.getters.getCognitoUser.pool.getClientId() + '.' + this.getters.getCognitoUser.username
+          var idTokenKey = keyPrefix + '.idToken'
+          this.getters.getCognitoUser.storage.setItem(idTokenKey, 'null')
+          Auth.changePassword(this.getters.getCognitoUser.username, userInfo.oldPassword, userInfo.password)
+          */
+          /*
+          Auth.currentAuthenticatedUser()
+            .then(user => {
+              if (userInfo.password === userInfo.passwordConfirm) {
+                return Auth.completeNewPassword(user, userInfo.oldPassword, userInfo.password)
+              } else {
+                window.app.$message({ message: window.app.$t('login.passwordMisMatch'), type: 'success' })
+                reject()
+              }
+            })
+            .then(data => {
+              console.error('got change password data')
+              console.log(data)
+              window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
+              resolve()
+            })
+            .catch(err => {
+              console.error('got change password error')
+              console.log(err)
+              reject(err)
+            })
+          */
+        })
+        /*
+        .catch((e) => {
+          console.error(e.code)
+          window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+          reject(e)
+        })
+        */
+      } else {
+        return new Promise((resolve, reject) => {
+          /*
+          userLoginUpdatePassword(userInfo.token, userInfo.password, userInfo.passwordConfirm, userInfo.code).then(response => {
+            window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
+            store.dispatch('LogOut').then(() => {
+              router.push({ path: '/login', replace: true, query: { noGoBack: false }})
+            })
+            resolve()
+          }).catch(error => {
+            reject(error)
+          })
+          */
+          reject()
+        })
+      }
+    },
     UserLoginUpdatePassword({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         userLoginUpdatePassword(userInfo.token, userInfo.password, userInfo.passwordConfirm, userInfo.code).then(response => {
@@ -131,21 +303,36 @@ const user = {
         })
       })
     },
-
     LoginForgotPassword({ commit }, userInfo) {
-      const username = userInfo.username.trim()
-      return new Promise((resolve, reject) => {
-        loginForgotPassword(username, userInfo.code).then(response => {
-          console.error('received ')
-          console.error(response)
-          window.app.$message({ message: window.app.$t('login.forgotPasswordEmail'), type: 'success' })
-          resolve()
-        }).catch(error => {
-          reject(error)
+      if (store.getters.isCognitoUser) {
+        return new Promise((resolve, reject) => {
+          Auth.forgotPassword(userInfo.username).then(user => {
+            window.app.$message({ message: window.app.$t('login.codeSubmitted'), type: 'success' })
+            commit('SET_CODE', true)
+            console.error(user)
+            resolve(userInfo.username)
+          }).catch(err => {
+            console.error(err)
+            window.app.$message({ message: window.app.$t('login.codeSubmitted'), type: 'success' })
+            // Who care if it doesn't exist
+            commit('SET_CODE', true)
+            resolve(userInfo.username)
+          })
         })
-      })
+      } else {
+        const username = userInfo.username.trim()
+        return new Promise((resolve, reject) => {
+          loginForgotPassword(username, userInfo.code).then(response => {
+            console.error('received ')
+            console.error(response)
+            window.app.$message({ message: window.app.$t('login.forgotPasswordEmail'), type: 'success' })
+            resolve()
+          }).catch(error => {
+            reject(error)
+          })
+        })
+      }
     },
-
     RegisterByUsernameCode({ commit }, userInfo) {
       const username = userInfo.username.trim()
       return new Promise((resolve, reject) => {
@@ -166,21 +353,52 @@ const user = {
 
     LoginByUsername({ commit }, userInfo) {
       const username = userInfo.username.trim()
-      return new Promise((resolve, reject) => {
-        loginByUsername(username, userInfo.password).then(response => {
-          window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-          const data = response.data
-          console.error('SET TOKEN OF....' + data.token)
-          commit('SET_TOKEN', data.token)
-          setToken(response.data.token)
-          const newRefreshTime = Math.round(new Date().getTime() / 1000)
-          commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-          setTokenLastRefresh(newRefreshTime)
-          resolve()
-        }).catch(error => {
-          reject(error)
+      if (store.getters.isCognitoUser) {
+        return new Promise((resolve, reject) => {
+          Auth.signIn(username, userInfo.password).then(function(a) {
+            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+            commit('SET_COGNITO_USER', a)
+
+            // TODO: Create a session with the UserId / Cognito User validation
+            // commit('SET_TOKEN', 'cognitoUser')
+            // setToken('cognitoUser')
+
+            resolve()
+          }).catch((e) => {
+            console.error(e.code)
+            window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+            reject(e)
+          })
         })
-      })
+      } else {
+        return new Promise((resolve, reject) => {
+          loginByUsername(username, userInfo.password).then(response => {
+            if (response && response.data) {
+              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+              const data = response.data
+              commit('SET_TOKEN', data.token)
+              setToken(response.data.token)
+              const newRefreshTime = Math.round(new Date().getTime() / 1000)
+              commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+              setTokenLastRefresh(newRefreshTime)
+            }
+            resolve()
+          }).catch(error => {
+            try {
+              if (error.response.status === 401) {
+                Message({
+                  message: window.app.$t('login.invalidPassword'),
+                  type: 'error',
+                  duration: 5 * 1000
+                })
+              }
+            } catch (ef) {
+              console.error(ef.stack)
+            }
+            reject(error)
+          })
+        })
+      }
     },
 
     // 获取用户信息
