@@ -91,7 +91,7 @@ export default {
     logIn: 'Log in',
     InvalidParameterException: 'Invalid parameter.',
     mfaTitleSms: 'Multi-Factor Authentication ( SMS )',
-    validateCode: 'Validate MFA',
+    validateCode: 'Sign In',
     loggedInSuccesfully: '',
     registerFirst: 'Create your first admin account',
     registerFirstNote: 'The new admin account will replace the current existing account',

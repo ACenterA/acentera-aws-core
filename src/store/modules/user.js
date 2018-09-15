@@ -86,7 +86,7 @@ const user = {
     SET_ROLES_ACTIVE: (state, roles) => {
       try {
         console.error(roles)
-        state.roles_active = roles.slice()
+        state.roles_active = roles.slice() // Clone the object
       } catch (e) {
         console.error(e.stack)
       }
@@ -177,33 +177,43 @@ const user = {
           commit('SET_COGNITO_USER', cognitoUser)
           if (user && user.signInUserSession) {
             window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-          }
-          // TODO: Create a session with the UserId / Cognito User validation
-          loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
-            if (response && response.data) {
-              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-              const data = response.data
-              commit('SET_TOKEN', data.token)
-              setToken(response.data.token)
-              const newRefreshTime = Math.round(new Date().getTime() / 1000)
-              commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-              setTokenLastRefresh(newRefreshTime)
-            }
-            resolve()
-          }).catch(error => {
-            try {
-              if (error.response.status === 401) {
-                Message({
-                  message: window.app.$t('login.invalidPassword'),
-                  type: 'error',
-                  duration: 5 * 1000
-                })
+            // TODO: Create a session with the UserId / Cognito User validation
+            loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
+              if (response && response.data) {
+                window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+                const data = response.data
+                commit('SET_TOKEN', data.token)
+
+                // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+                // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+
+                cognitoUser.cacheTokens()
+                cognitoUser = null
+                commit('SET_COGNITO_USER', {})
+
+                setToken(response.data.token)
+                const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                setTokenLastRefresh(newRefreshTime)
               }
-            } catch (ef) {
-              console.error(ef.stack)
-            }
-            reject(error)
-          })
+              resolve()
+            }).catch(error => {
+              try {
+                if (error.response.status === 401) {
+                  Message({
+                    message: window.app.$t('login.invalidPassword'),
+                    type: 'error',
+                    duration: 5 * 1000
+                  })
+                }
+              } catch (ef) {
+                console.error(ef.stack)
+              }
+              reject(error)
+            })
+          } else {
+            resolve()
+          }
         }).catch(e => {
           console.error('confirmSigninUser EE')
           var Msg = window.app.$t('login.' + e.code)
@@ -440,31 +450,42 @@ const user = {
             commit('SET_COGNITO_USER', a)
             cognitoUser = a
             // TODO: Create a session with the UserId / Cognito User validation
-            loginByUsernameThirdParty(cognitoUser.username, 'cognito', a, store.getters.settings.cognito).then(response => {
-              if (response && response.data) {
-                window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-                const data = response.data
-                commit('SET_TOKEN', data.token)
-                setToken(response.data.token)
-                const newRefreshTime = Math.round(new Date().getTime() / 1000)
-                commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-                setTokenLastRefresh(newRefreshTime)
-              }
-              resolve()
-            }).catch(error => {
-              try {
-                if (error.response.status === 401) {
-                  Message({
-                    message: window.app.$t('login.invalidPassword'),
-                    type: 'error',
-                    duration: 5 * 1000
-                  })
+            if (a && a.signInUserSession) {
+              // There was maybe no MFA. This is bad but you know ..
+              // This also gets called as a dispatch in some other functions to ensure we re-use the same functions
+              loginByUsernameThirdParty(cognitoUser.username, 'cognito', a, store.getters.settings.cognito).then(response => {
+                if (response && response.data) {
+                  window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+                  const data = response.data
+                  commit('SET_TOKEN', data.token)
+                  setToken(response.data.token)
+                  // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+                  // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+                  a.cacheTokens()
+                  cognitoUser = null
+                  commit('SET_COGNITO_USER', {})
+                  const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                  commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                  setTokenLastRefresh(newRefreshTime)
                 }
-              } catch (ef) {
-                console.error(ef.stack)
-              }
-              reject(error)
-            })
+                resolve()
+              }).catch(error => {
+                try {
+                  if (error.response.status === 401) {
+                    Message({
+                      message: window.app.$t('login.invalidPassword'),
+                      type: 'error',
+                      duration: 5 * 1000
+                    })
+                  }
+                } catch (ef) {
+                  console.error(ef.stack)
+                }
+                reject(error)
+              })
+            } else {
+              resolve()
+            }
           }).catch((e) => {
             console.error(e.code)
             window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
@@ -512,8 +533,13 @@ const user = {
           const data = response.data
 
           if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
-            commit('SET_ROLES', data.roles)
-            commit('SET_ROLES_ACTIVE', data.roles)
+            var lowerCaseRoles = []
+            var roleLen = data.roles.length
+            for (var z = 0; z < roleLen; z++) {
+              lowerCaseRoles.push(data.roles[z].toLowerCase())
+            }
+            commit('SET_ROLES', lowerCaseRoles)
+            commit('SET_ROLES_ACTIVE', lowerCaseRoles)
           } else {
             reject('getInfo: roles must be a non-null array !')
           }
@@ -614,7 +640,17 @@ const user = {
             // Change User Role (ServerSession already contains this role)
             changeUserRole(role).then(getUserInfo().then(response => {
               const data = response.data
-              commit('SET_ROLES', data.roles)
+
+              var lowerCaseRoles = []
+              if (!data.roles) {
+                data.roles = [] // cannot be but if backend error... safety
+              }
+              var roleLen = data.roles.length
+              for (var z = 0; z < roleLen; z++) {
+                lowerCaseRoles.push(data.roles[z].toLowerCase())
+              }
+
+              commit('SET_ROLES', lowerCaseRoles)
               commit('SET_NAME', data.name)
               commit('SET_AVATAR', data.avatar)
               commit('SET_INTRODUCTION', data.introduction)
@@ -635,7 +671,14 @@ const user = {
           }).then((action) => {
             changeUserRole(role, action.value).then(getUserInfo().then(response => {
               const data = response.data
-              commit('SET_ROLES', data.roles)
+
+              var lowerCaseRoles = []
+              var roleLen = data.roles.length
+              for (var z = 0; z < roleLen; z++) {
+                lowerCaseRoles.push(data.roles[z].toLowerCase())
+              }
+              commit('SET_ROLES', lowerCaseRoles)
+
               commit('SET_NAME', data.name)
               commit('SET_AVATAR', data.avatar)
               commit('SET_INTRODUCTION', data.introduction)

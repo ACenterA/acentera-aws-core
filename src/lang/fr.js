@@ -94,7 +94,7 @@ export default {
     cancelUpdate: 'Annulé la modification',
     InvalidParameterException: 'Veuillez vérifier les paramètres.',
     mfaTitleSms: 'Vérification nécessaire (MFA - SMS)',
-    validateCode: 'Vérifié l\'authentication',
+    validateCode: 'Connexion',
     loggedInSuccesfully: '',
     signUp: 'Créer mon compte',
     Successfully: 'Vous vous êtes conntecté a votre compte avec succèss',
