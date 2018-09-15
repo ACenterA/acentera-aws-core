@@ -1,4 +1,4 @@
-import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, logout, getUserInfo } from '@/api/login'
+import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, loginByUsernameThirdParty, logout, getUserInfo } from '@/api/login'
 import router from '@/router'
 import { Auth, Logger } from 'aws-amplify'
 
@@ -174,11 +174,36 @@ const user = {
         // Somehow the getter doesnt have all the functions ?
         Auth.confirmSignIn(cognitoUser, code, mfaType).then(user => {
           cognitoUser = user
-          commit('SET_COGNITO_USER', user)
+          commit('SET_COGNITO_USER', cognitoUser)
           if (user && user.signInUserSession) {
             window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
           }
-          resolve()
+          // TODO: Create a session with the UserId / Cognito User validation
+          loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
+            if (response && response.data) {
+              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+              const data = response.data
+              commit('SET_TOKEN', data.token)
+              setToken(response.data.token)
+              const newRefreshTime = Math.round(new Date().getTime() / 1000)
+              commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+              setTokenLastRefresh(newRefreshTime)
+            }
+            resolve()
+          }).catch(error => {
+            try {
+              if (error.response.status === 401) {
+                Message({
+                  message: window.app.$t('login.invalidPassword'),
+                  type: 'error',
+                  duration: 5 * 1000
+                })
+              }
+            } catch (ef) {
+              console.error(ef.stack)
+            }
+            reject(error)
+          })
         }).catch(e => {
           console.error('confirmSigninUser EE')
           var Msg = window.app.$t('login.' + e.code)
@@ -415,10 +440,31 @@ const user = {
             commit('SET_COGNITO_USER', a)
             cognitoUser = a
             // TODO: Create a session with the UserId / Cognito User validation
-            // commit('SET_TOKEN', 'cognitoUser')
-            // setToken('cognitoUser')
-
-            resolve()
+            loginByUsernameThirdParty(cognitoUser.username, 'cognito', a, store.getters.settings.cognito).then(response => {
+              if (response && response.data) {
+                window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+                const data = response.data
+                commit('SET_TOKEN', data.token)
+                setToken(response.data.token)
+                const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                setTokenLastRefresh(newRefreshTime)
+              }
+              resolve()
+            }).catch(error => {
+              try {
+                if (error.response.status === 401) {
+                  Message({
+                    message: window.app.$t('login.invalidPassword'),
+                    type: 'error',
+                    duration: 5 * 1000
+                  })
+                }
+              } catch (ef) {
+                console.error(ef.stack)
+              }
+              reject(error)
+            })
           }).catch((e) => {
             console.error(e.code)
             window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })

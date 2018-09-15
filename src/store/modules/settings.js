@@ -21,9 +21,9 @@ const settings = {
       },
       cognito: {
         REGION: 'us-east-1', // 'YOUR_COGNITO_REGION',
-        USER_POOL_ID: 'us-east-1_e7gsuxHHc', // 'YOUR_COGNITO_USER_POOL_ID',
-        APP_CLIENT_ID: 'uiqnrquee9d6domfk852rt05o', // 'YOUR_COGNITO_APP_CLIENT_ID',
-        IDENTITY_POOL_ID: 'us-east-1:c2ed8a93-adb8-4ca7-bf5c-6345ac170f0a' // 'YOUR_IDENTITY_POOL_ID'
+        USER_POOL_ID: 'us-east-1_wCUctuupQ', // 'YOUR_COGNITO_USER_POOL_ID',
+        APP_CLIENT_ID: '1v25fnqa2tve7cj48a665pj4o0', // 'YOUR_COGNITO_APP_CLIENT_ID',
+        IDENTITY_POOL_ID: 'us-east-1:8cd5d86c-246e-4f9b-bd82-a67f42d18e66' // 'YOUR_IDENTITY_POOL_ID'
       }
     }
   },

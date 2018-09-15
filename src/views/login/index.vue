@@ -180,7 +180,8 @@
         </div>
 
         <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
-          <h5 class="titleFirstTime">{{ $t('login.firstTime') }}</h5>
+          <h5 v-if="isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeCognito') }}</h5>
+          <h5 v-if="!isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeNonCognito') }}</h5>
           <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
           <a :href="settings.stackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
         </div>
@@ -266,12 +267,14 @@
 <script>
 import { isvalidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
-import SocialSign from './socialsignin'
 import { mapGetters } from 'vuex'
+
+// TODO: This was made to simply implement all temporary features
+//       We should add components for various actions that would be cleaner and easier to read
 
 export default {
   name: 'Login',
-  components: { LangSelect, SocialSign },
+  components: { LangSelect },
   data() {
     const activeName = 'Login'
 

@@ -1,5 +1,19 @@
 import request from '@/utils/request'
 
+export function loginByUsernameThirdParty(username, type, userinfo, thirdparty) {
+  const data = {
+    username,
+    type,
+    userinfo,
+    thirdparty
+  }
+  return request({
+    url: '/login/login',
+    method: 'post',
+    data
+  })
+}
+
 export function loginByUsername(username, password) {
   const data = {
     username,
