@@ -4,12 +4,14 @@ import { getSettingsToken, setSettingsToken } from '@/utils/settings.js'
 
 const settings = {
   state: {
+    isLoaded: false,
     allowRegister: false,
     recaptchaKey: '',
     mfaEnabled: false,
     firstTime: '',
     missingSiteEntry: false,
     stackUrl: '',
+    plugins: {}, // add plugin hash to load plugins if needed..
     cognito: {
       s3: {
         REGION: 'YOUR_S3_UPLOADS_BUCKET_REGION',
@@ -34,8 +36,17 @@ const settings = {
     SET_ALLOW_REGISTER: (state, allowRegister) => {
       state.allowRegister = allowRegister
     },
+    SET_LOADED: (state, val) => {
+      state.isLoaded = val
+    },
     SET_FIRST_TIME: (state, firstTime) => {
       state.firstTime = firstTime
+    },
+    SET_PLUGINS: (state, plugins) => {
+      state.plugins = plugins
+      console.error('saving state of')
+      console.error(state)
+      console.error(state.plugins)
     },
     SET_MISSING_SITE_ENTRY: (state, entry) => {
       console.error('stateu  is ')
@@ -105,11 +116,15 @@ const settings = {
       console.error('receieved update site stettings')
       console.error(commit)
       console.error(data)
+      commit('SET_LOADED', true)
       commit('SET_RECAPCHA_KEY', data.recaptchaKey)
       commit('SET_ALLOW_REGISTER', data.allowRegister)
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
       commit('SET_STACK_URL', data.stackUrl)
+      console.error('RECIEVED SETTINGS PLUGIN A')
+      console.error(data)
+      commit('SET_PLUGINS', data.plugins)
 
       commit('SET_COGNITO', data.cognito)
 
@@ -117,38 +132,42 @@ const settings = {
     },
     GetSiteSettings({ commit, state }) {
       return new Promise((resolve, reject) => {
-        var data = getSettingsToken()
-        var hasResolved = false
-        if (data) {
-          store.dispatch('UpdateSiteSettings', { data }).then(() => {
-            hasResolved = true
-            resolve('resolve')
-          })
-        }
-        // We will update based on rest api if needed
-        getSiteSettings().then(response => {
-          console.error('recieved et site settings...B')
-          if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
-            // Save app Settings ...
-            const data = response.data
-            store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
-              if (!hasResolved) {
-                hasResolved = true
-                resolve('resolve fetch')
-              }
+        if (state.isLoaded) {
+          resolve('loaded')
+        } else {
+          var data = getSettingsToken()
+          var hasResolved = false
+          if (data) {
+            store.dispatch('UpdateSiteSettings', { data }).then(() => {
+              hasResolved = true
+              resolve('resolve')
             })
           }
-          if (!hasResolved) {
-            resolve('forced_no_internet_or_cookies')
-          }
-        })
-        /*
-        .catch(err => {
-          if (err) {
-            console.error('could not refresh cache')
-          }
-        })
-        */
+          // We will update based on rest api if needed
+          getSiteSettings().then(response => {
+            console.error('recieved et site settings...B')
+            if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
+              // Save app Settings ...
+              const data = response.data
+              store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
+                if (!hasResolved) {
+                  hasResolved = true
+                  resolve('resolve fetch')
+                }
+              })
+            }
+            if (!hasResolved) {
+              resolve('forced_no_internet_or_cookies')
+            }
+          })
+          /*
+          .catch(err => {
+            if (err) {
+              console.error('could not refresh cache')
+            }
+          })
+          */
+        }
       })
     }
   }

@@ -80,6 +80,7 @@ export default {
   },
   methods: {
     toggleSideBar() {
+      console.error('toggleSideBar')
       this.$store.dispatch('toggleSideBar')
     },
     logout() {

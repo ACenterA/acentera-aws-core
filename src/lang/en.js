@@ -74,8 +74,12 @@ export default {
   language: {
     switchSuccess: 'Switch Language Success'
   },
+  error: {
+    ServerTimeout: 'Could not contact server'
+  },
   login: {
     passwordResetTitle: 'Reset your password',
+    PasswordResetRequiredException: 'The administrator forced an password reset on this account. Use the forgot password option',
     passwordResetExpired: 'Your reset password has either expired or is invalid',
     passwordChangeTitle: 'You must change your password',
     passwordResetCodeConfirm: 'Confirm the code confirmation and new password',

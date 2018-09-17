@@ -174,13 +174,13 @@ const user = {
         // Somehow the getter doesnt have all the functions ?
         Auth.confirmSignIn(cognitoUser, code, mfaType).then(user => {
           cognitoUser = user
+          console.error('GET COGNITOA A')
           commit('SET_COGNITO_USER', cognitoUser)
           if (user && user.signInUserSession) {
-            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
             // TODO: Create a session with the UserId / Cognito User validation
             loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
               if (response && response.data) {
-                window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+                window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
                 const data = response.data
                 commit('SET_TOKEN', data.token)
 
@@ -201,7 +201,7 @@ const user = {
               try {
                 if (error.response.status === 401) {
                   Message({
-                    message: window.app.$t('login.invalidPassword'),
+                    message: window.app.$t('login.invalidPassword') + ' 2 ',
                     type: 'error',
                     duration: 5 * 1000
                   })
@@ -221,7 +221,7 @@ const user = {
             Msg = Msg + '[' + e.message + ']'
           }
           console.error('confirmSigninUser FF')
-          window.app.$message({ message: Msg, type: 'error' })
+          window.app.$message({ message: Msg + '', type: 'error' })
           console.log(e)
           reject(e)
         })
@@ -234,6 +234,7 @@ const user = {
         return new Promise((resolve, reject) => {
           const currentUsername = this.getters.getCognitoUser.username
           Auth.signIn(currentUsername, userInfo.oldPassword).then(function(a) {
+            console.error('GET COGNITOA SIGNING A')
             console.error('GOT SIGNING')
             console.error('Calling complete new Pwd')
             cognitoUser = a
@@ -261,7 +262,7 @@ const user = {
               if (e.message) {
                 Msg = Msg + '[' + e.message + ']'
               }
-              window.app.$message({ message: Msg, type: 'error' })
+              window.app.$message({ message: Msg + '', type: 'error' })
               console.log(e)
               reject(e)
             })
@@ -351,7 +352,7 @@ const user = {
     UserLoginUpdatePassword({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         userLoginUpdatePassword(userInfo.token, userInfo.password, userInfo.passwordConfirm, userInfo.code).then(response => {
-          window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
+          window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully') + '', type: 'success' })
           store.dispatch('LogOut').then(() => {
             router.push({ path: '/login', replace: true, query: { noGoBack: false }})
           })
@@ -442,11 +443,10 @@ const user = {
       const username = userInfo.username.trim()
       if (store.getters.isCognitoUser) {
         return new Promise((resolve, reject) => {
+          console.error('GET COGNITOA SIGNING AA')
           Auth.signIn(username, userInfo.password).then(function(a) {
+            console.error('GET COGNITOA SIGNING BB')
             // Ok cognito User now have a Session so we are good
-            if (a && a.signInUserSession) {
-              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-            }
             commit('SET_COGNITO_USER', a)
             cognitoUser = a
             // TODO: Create a session with the UserId / Cognito User validation
@@ -487,6 +487,7 @@ const user = {
               resolve()
             }
           }).catch((e) => {
+            console.error('GET COGNITOA SIGNING CC')
             console.error(e.code)
             window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
             reject(e)
@@ -507,9 +508,15 @@ const user = {
             resolve()
           }).catch(error => {
             try {
-              if (error.response.status === 401) {
+              if (!error.response) {
                 Message({
-                  message: window.app.$t('login.invalidPassword'),
+                  message: window.app.$t('error.ServerTimeout') + '',
+                  type: 'error',
+                  duration: 5 * 1000
+                })
+              } else if (error.response.status === 401) {
+                Message({
+                  message: window.app.$t('login.invalidPassword') + '',
                   type: 'error',
                   duration: 5 * 1000
                 })
@@ -527,6 +534,7 @@ const user = {
     GetUserInfo({ commit, state }) {
       return new Promise((resolve, reject) => {
         getUserInfo(state.token).then(response => {
+          console.error('getUserInfo here  INFO A')
           if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
             reject('error')
           }
@@ -639,6 +647,7 @@ const user = {
           if (found) {
             // Change User Role (ServerSession already contains this role)
             changeUserRole(role).then(getUserInfo().then(response => {
+              console.error('GET UESR INFO A')
               const data = response.data
 
               var lowerCaseRoles = []
@@ -670,6 +679,7 @@ const user = {
             inputPlaceholder: 'Enter password here'
           }).then((action) => {
             changeUserRole(role, action.value).then(getUserInfo().then(response => {
+              console.error('GET UESR INFO B')
               const data = response.data
 
               var lowerCaseRoles = []

@@ -74,9 +74,13 @@ export default {
   language: {
     switchSuccess: 'Changement de langue complété avec succès'
   },
+  error: {
+    ServerTimeout: 'Erreur de connection au serveur'
+  },
   login: {
     passwordResetTitle: 'Modifier votre mot de passe',
     passwordResetExpired: 'Votre demande est expiré ou est invalide',
+    PasswordResetRequiredException: 'Votre administratuer a forcer une demande de modification de mot de passe. Utilisez l\'option du mot de passe oublié.',
     passwordChangeTitle: 'Modification est nécessaire',
     siteConfigError: 'Il y a une erreur de configuration. Le site ne peut pas être configuré. Veuillez contacter le support a l\'addresse suivante support@acentera.com',
     InvalidPasswordException: 'Le mot de passe n\'est pas conforme. Il doit contenir des symboles, des majuscule et minuscules ainsi que des chiffres',

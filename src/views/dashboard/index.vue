@@ -8,12 +8,13 @@
 import { mapGetters } from 'vuex'
 import adminDashboard from './admin'
 import editorDashboard from './editor'
+import guestDashboard from './guest'
 import firstAdminDashboard from './firstAdmin'
 import loading from './loading'
 
 export default {
   name: 'Dashboard',
-  components: { adminDashboard, editorDashboard, firstAdminDashboard, loading },
+  components: { adminDashboard, editorDashboard, firstAdminDashboard, guestDashboard, loading },
   data() {
     return {
       currentRole: 'loading'
@@ -32,7 +33,11 @@ export default {
       console.error('CALLING SHOW SIDEBAR')
       this.$store.dispatch('showSidebar', true)
       if (!this.roles.includes('admin')) {
-        this.currentRole = 'editorDashboard'
+        if (!this.roles.includes('editor')) {
+          this.currentRole = 'guestDashboard'
+        } else {
+          this.currentRole = 'editorDashboard'
+        }
       } else {
         this.currentRole = 'adminDashboard'
       }

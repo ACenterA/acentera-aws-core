@@ -55,12 +55,19 @@
         <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCancelCode">{{ $t('login.cancelUpdate') }}</el-button>
       </el-form>
     </div>
-
     <div v-if="!isLoginCodeReset && getCognitoUser">
-      <div v-if="getCognitoUser.signInUserSession">
-        <div class="title-container">
-          <h3 class="title">{{ $t('login.loggedInSuccesfully') }}</h3>
-        </div>
+
+      <div v-if="getCognitoUser.signInUserSession || !getCognitoUser.signInUserSession">
+        <!-- Loading ... -->
+        <el-form class="login-form" label-position="left">
+          <div class="center" style="margin-top:50px;display: table; margin:auto">
+            <self-building-square-spinner
+              :animation-duration="6000"
+              :size="40"
+              color="#ffffff"
+            />
+          </div>
+        </el-form>
       </div>
       <div v-if="!getCognitoUser.signInUserSession">
         <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
@@ -164,6 +171,7 @@
       </div>
     </div>
     <div v-if="!isLoginCodeReset && !getCognitoUser">
+      BBBB
       <div v-if="isMissingEntry">
         <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
           <div class="title-container">
@@ -268,13 +276,17 @@
 import { isvalidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import { mapGetters } from 'vuex'
+import { SelfBuildingSquareSpinner } from 'epic-spinners'
 
 // TODO: This was made to simply implement all temporary features
 //       We should add components for various actions that would be cleaner and easier to read
 
 export default {
   name: 'Login',
-  components: { LangSelect },
+  components: {
+    LangSelect,
+    SelfBuildingSquareSpinner
+  },
   data() {
     const activeName = 'Login'
 

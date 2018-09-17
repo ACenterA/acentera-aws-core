@@ -121,9 +121,14 @@ export const constantRouterMap = [
 
 export default new Router({
   // mode: 'history', // require service support
+  mode: 'history',
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRouterMap
 })
+
+export const asyncTestRouterMapTemp = [
+]
+window.asyncTestRouterMapTemp = asyncTestRouterMapTemp
 
 // admin is always added to all routes (see the async filtering... in store/module/permissions.js
 export const asyncRouterMap = [

@@ -4,7 +4,7 @@ const app = {
   state: {
     sidebar: {
       opened: !+Cookies.get('sidebarStatus'),
-      visible: false,
+      visible: true,
       withoutAnimation: false
     },
     device: 'desktop',
@@ -15,8 +15,10 @@ const app = {
   mutations: {
     TOGGLE_SIDEBAR: state => {
       if (state.sidebar.opened) {
+        console.error('set opened')
         Cookies.set('sidebarStatus', 1)
       } else {
+        console.error('set set closed')
         Cookies.set('sidebarStatus', 0)
       }
       state.sidebar.opened = !state.sidebar.opened
@@ -52,6 +54,7 @@ const app = {
   },
   actions: {
     toggleSideBar({ commit }) {
+      console.error('commit toggle sidebar')
       commit('TOGGLE_SIDEBAR')
     },
     closeSideBar({ commit }, { withoutAnimation }) {

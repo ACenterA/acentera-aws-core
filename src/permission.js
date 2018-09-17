@@ -11,7 +11,7 @@ NProgress.configure({ showSpinner: false })// NProgress Configuration
 function hasPermission(roles, permissionRoles) {
   if (roles.indexOf('admin') >= 0) return true // admin permission passed directly
   if (!permissionRoles) return true
-  return roles.some(role => permissionRoles.indexOf(role) >= 0)
+  return (roles || []).some(role => permissionRoles.indexOf(role) >= 0)
 }
 
 const whiteList = [
@@ -43,7 +43,7 @@ router.beforeEach((to, from, next) => {
       })
     }
   } else {
-    store.dispatch('GetSiteSettings').then(res => { // 拉取user_info
+    store.dispatch('GetSiteSettings').then(res => { // Required for firstTime loging notification in login page and other plugins infos?
       if (getToken()) { // determine if there has token
         /* has token*/
         if (to.path === '/login') {
@@ -51,12 +51,40 @@ router.beforeEach((to, from, next) => {
           NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
         } else {
           if (store.getters.roles.length === 0) { // 判断当前用户是否已拉取完user_info信息
-            store.dispatch('GetUserInfo').then(res => { // 拉取user_info
-              const roles = res.data.roles // note: roles must be a array! such as: ['editor','develop']
-              store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
-                router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
-                next({ ...to, replace: true }) // hack方法 确保addRoutes已完成 ,set the replace: true so the navigation will not leave a history record
-              })
+            store.dispatch('GetUserInfo').then(res => { // user_info
+              if (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0)) {
+                const roles = []
+                var len = res.data.roles.length // note: roles must be a array! such as: ['editor','develop']
+                for (var z = 0; z < len; z++) {
+                  roles.push(res.data.roles[z].toLowerCase())
+                }
+
+                if (to.path.startsWith('/plugins/')) {
+                  store.dispatch('LoadPlugins', { roles }).then((routesToAdd) => {
+                    if (routesToAdd) {
+                      router.addRoutes(routesToAdd)
+                    }
+                    store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                      router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
+                      next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                    })
+                  })
+                } else {
+                  store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                    router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
+
+                    next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+
+                    store.dispatch('LoadPlugins', { roles }).then((routesToAdd) => {
+                      if (routesToAdd) {
+                        router.addRoutes(routesToAdd)
+                      }
+                    })
+                  })
+                }
+              } else {
+                next()
+              }
             }).catch((err) => {
               store.dispatch('FedLogOut').then(() => {
                 Message.error(err || 'Verification failed, please login again')

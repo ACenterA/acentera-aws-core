@@ -32,13 +32,13 @@ const cache = setupCache({
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.BASE_API, // api 的 base_url
-  timeout: 5000 // request timeout
+  timeout: 15000 // request timeout
 })
 
 const cachedService = axios.create({
   adapter: cache.adapter,
   baseURL: process.env.BASE_API, // api 的 base_url
-  timeout: 5000 // request timeout
+  timeout: 15000 // request timeout
 })
 
 const configHandler = function(config) {
@@ -180,10 +180,15 @@ const handleError = function(error, test) {
     if (!resp) {
       console.error('RESOLVE A')
       router.push({ path: '/error/no_api_access', replace: true, query: { noGoBack: false }})
-      return Promise.reject({ error: 'no_api_access' })
+      return Promise.reject({ error: 'no_api_access', message: window.app.$t('error.ServerTimeout') })
     }
   }
   console.error('RESOLVE B')
+  // if (!err.message) {
+  console.error('here no message')
+  console.error(err.stack)
+  err['message'] = window.app.$t('error.ServerTimeout')
+  // }
   return Promise.reject(err)
 }
 
