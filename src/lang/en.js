@@ -78,6 +78,14 @@ export default {
     ServerTimeout: 'Could not contact server'
   },
   login: {
+    name: 'Your Fullname',
+    mfaRegisterRequired: 'Register MFA Device',
+    mfaRegisterSubmit: 'Register device',
+    mfaTitleToken: 'Multi-Factor Authentication',
+    mfa: '(Optional) MFA Code',
+    InvalidCode: 'Invalid Code. Make sure to re-scan the QR Code and try again.',
+    phone_number: 'Your phone number (+XXXYYYXXXX)',
+    newPpassword: 'New complex password',
     passwordResetTitle: 'Reset your password',
     PasswordResetRequiredException: 'The administrator forced an password reset on this account. Use the forgot password option',
     passwordResetExpired: 'Your reset password has either expired or is invalid',
@@ -86,6 +94,7 @@ export default {
     siteConfigError: 'An error occured. The site cannot be configured. Please contact support at support@acentera.com',
     title: 'Login to my account',
     code: 'Enter the code here',
+    codeSoftware: 'Enter the code here',
     CodeMismatchException: 'The code does not match the one we sent you',
     InvalidPasswordException: 'Password does not conform to policy: Password must have symbol characters, lowercase, uppercase and numbers',
     ExpiredCodeException: 'The code specified is expired or invalid',

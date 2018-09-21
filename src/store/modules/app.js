@@ -15,10 +15,8 @@ const app = {
   mutations: {
     TOGGLE_SIDEBAR: state => {
       if (state.sidebar.opened) {
-        console.error('set opened')
         Cookies.set('sidebarStatus', 1)
       } else {
-        console.error('set set closed')
         Cookies.set('sidebarStatus', 0)
       }
       state.sidebar.opened = !state.sidebar.opened
@@ -30,13 +28,10 @@ const app = {
       state.sidebar.withoutAnimation = withoutAnimation
     },
     SHOW_SIDEBAR: (state, withoutAnimation) => {
-      console.error('show sidebbar')
-      console.error('set state to visible..')
       state.sidebar.visible = true
       state.sidebar.withoutAnimation = withoutAnimation
     },
     HIDE_SIDEBAR: (state, withoutAnimation) => {
-      console.error('hide sidebbar')
       state.sidebar.visible = false
       state.sidebar.withoutAnimation = withoutAnimation
     },
@@ -54,7 +49,6 @@ const app = {
   },
   actions: {
     toggleSideBar({ commit }) {
-      console.error('commit toggle sidebar')
       commit('TOGGLE_SIDEBAR')
     },
     closeSideBar({ commit }, { withoutAnimation }) {

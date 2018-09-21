@@ -129,12 +129,9 @@ export default {
       return {}
     },
     isMissingEntry() {
-      console.error('missing a')
       if (this.$store && this.$store.getters && this.$store.getters.settings) {
-        console.error('missing b')
         return this.$store.getters.settings.missingSiteEntry === true
       }
-      console.error('missing c')
       return false
     }
   },
@@ -173,11 +170,8 @@ export default {
           this.loading = true
           this.$store.dispatch('UserLoginUpdatePassword', this.loginForm).then(() => {
             // Todo: perform logout
-            // console.error('recevied info')
             // this.loading = false
           }).catch((e) => {
-            console.error('recevied error')
-            console.error(e)
             this.loading = false
           })
         } else {

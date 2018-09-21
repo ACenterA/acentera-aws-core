@@ -14,6 +14,22 @@ export function loginByUsernameThirdParty(username, type, userinfo, thirdparty) 
   })
 }
 
+export function registerDeviceCodeByUsernameThirdParty(username, type, userinfo, thirdparty, code, secret) {
+  const data = {
+    username,
+    type,
+    userinfo,
+    thirdparty,
+    code,
+    secret
+  }
+  return request({
+    url: '/login/login',
+    method: 'post',
+    data
+  })
+}
+
 export function loginByUsername(username, password) {
   const data = {
     username,

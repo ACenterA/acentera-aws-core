@@ -42,11 +42,6 @@ const cachedService = axios.create({
 })
 
 const configHandler = function(config) {
-  console.error('IN CONFIG HANDLER')
-  console.error('GET TOKEN IS ')
-  console.error(getToken())
-  console.error(this)
-  console.error(config)
   // Do something before request is sent
   if (getToken()) {
     // With the User Token we have received, lets make sure to refresh the token
@@ -80,10 +75,7 @@ const configHandler = function(config) {
 }
 
 const handleSuccess = function(response) {
-  console.error('RECIEVED RESPONSE ')
   const res = response
-  console.error(res)
-  console.error(res.status)
   if (res.status >= 200 || res.status <= 204) { // 200, 201, 204 /// all good
     return response
   } else {
@@ -92,7 +84,6 @@ const handleSuccess = function(response) {
       // Ask the user to reload its browser, new verseion of this website exists
     }
 
-    console.error('got status ' + res.status)
     if (res.status === 401) {
       return store.dispatch('LogOut').then(() => {
         location.reload()// In order to re-instantiate the vue-router object to avoid bugs
@@ -130,10 +121,6 @@ const handleSuccess = function(response) {
 const handleError = function(error, test) {
   // For LogOut someone might already have remoed this session ...
   // Also sessions does auto-expires if left over on the server side or on password / role changes
-  console.error('promise reject of ?')
-  console.error(error)
-  console.error(test)
-  console.error(JSON.stringify(error))
   var config = null
   var resp = null
 
@@ -141,29 +128,20 @@ const handleError = function(error, test) {
 
   if (error) {
     if (error.config) {
-      console.error('got error . config')
       config = error.config
     } else {
-      console.error('not got error . config')
       if (error.response && error.response.config) {
         config = error.response.config
       }
     }
 
     if (error.response) {
-      console.error('got error . response')
       resp = error.response
     } else {
-      console.error('not got error . config')
       if (error.response && error.response) {
         resp = error.response
       }
     }
-
-    console.error('config is')
-    console.error(config)
-    console.error('RESP is')
-    console.error(resp)
     err['config'] = config
     err['response'] = resp
   }
@@ -178,15 +156,11 @@ const handleError = function(error, test) {
   } else {
     // API Is Down
     if (!resp) {
-      console.error('RESOLVE A')
       router.push({ path: '/error/no_api_access', replace: true, query: { noGoBack: false }})
       return Promise.reject({ error: 'no_api_access', message: window.app.$t('error.ServerTimeout') })
     }
   }
-  console.error('RESOLVE B')
   // if (!err.message) {
-  console.error('here no message')
-  console.error(err.stack)
   err['message'] = window.app.$t('error.ServerTimeout')
   // }
   return Promise.reject(err)
@@ -213,10 +187,8 @@ service.interceptors.response.use(
 const handler = function(data, cache) {
   if (cache) {
     data['cache'] = cache
-    console.error('using cache')
     return cachedService(data)
   } else {
-    console.error('not using cache')
     return service(data)
   }
 }

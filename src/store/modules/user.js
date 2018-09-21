@@ -1,4 +1,4 @@
-import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, loginByUsernameThirdParty, logout, getUserInfo } from '@/api/login'
+import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, loginByUsernameThirdParty, registerDeviceCodeByUsernameThirdParty, logout, getUserInfo } from '@/api/login'
 import router from '@/router'
 import { Auth, Logger } from 'aws-amplify'
 
@@ -34,6 +34,8 @@ const user = {
     user: '',
     status: '',
     code: '',
+    needRegisterMFA: '',
+    needRegisterMFAStr: '',
     lastTokenRefresh: 0,
     token: getToken(),
     admin_token: getAdminToken(),
@@ -59,8 +61,6 @@ const user = {
       state.admin_token = token
     },
     SET_LAST_TOKEN_REFRESH: (state, refreshTime) => {
-      console.error('set last token refresh to')
-      console.error(state)
       state.lastTokenRefresh = refreshTime
     },
     SET_INTRODUCTION: (state, introduction) => {
@@ -78,21 +78,16 @@ const user = {
     SET_AVATAR: (state, avatar) => {
       state.avatar = avatar
     },
+    SET_NEED_MFA: (state, dta) => {
+      state.needRegisterMFA = dta.code
+      state.needRegisterMFAStr = dta.url
+      // ex: otpauth://totp/@amazon.com?secret=42ON57B6HQ274UQOFMITDLTZ2UOEBPHJHWCJA77XYCLJSHEFXXX
+    },
     SET_ROLES: (state, roles) => {
-      console.error('override roles...')
       state.roles = roles
-      console.error(roles)
     },
     SET_ROLES_ACTIVE: (state, roles) => {
-      try {
-        console.error(roles)
-        state.roles_active = roles.slice() // Clone the object
-      } catch (e) {
-        console.error(e.stack)
-      }
-      console.error('ROLES ARE:')
-      console.error(state.roles)
-      console.error(state.roles_active)
+      state.roles_active = (roles || []).slice() // Clone the object
     },
     SET_COGNITO_USER: (state, cognitoUser) => {
       state.cognito = cognitoUser
@@ -100,6 +95,15 @@ const user = {
 
   },
   getters: {
+    needMFARegistration(state) {
+      if (state.needRegisterMFA) {
+        return (state.needRegisterMFA).replace('"', '')
+      }
+      return ''
+    },
+    needMFARegistrationStr(state) {
+      return state.needRegisterMFAStr
+    },
     getCognitoUser(state) {
       return state.cognito
     },
@@ -138,6 +142,43 @@ const user = {
         context.commit('auth/setAuthenticationError', err, { root: true })
       }
     },
+    UserAssignDeviceConfirmation({ commit }, mfaInfo) {
+      return new Promise((resolve, reject) => {
+        var mfaTmp = {
+          code: mfaInfo.secret,
+          url: mfaInfo.url
+        }
+        var mfaTmpA = {
+          code: '',
+          url: ''
+        }
+        commit('SET_NEED_MFA', mfaTmpA)
+        registerDeviceCodeByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito, mfaInfo.code, mfaInfo.code, mfaInfo.secret).then(response => {
+          if (response && response.data) {
+            window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
+            const data = response.data
+            commit('SET_TOKEN', data.token)
+            // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+            // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+            cognitoUser.cacheTokens()
+            cognitoUser = null
+            commit('SET_COGNITO_USER', {})
+
+            setToken(response.data.token)
+            const newRefreshTime = Math.round(new Date().getTime() / 1000)
+            commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+            setTokenLastRefresh(newRefreshTime)
+          } else {
+            commit('SET_NEED_MFA', mfaTmp)
+          }
+          resolve()
+        }).catch(function(er) {
+          window.app.$message({ message: window.app.$t('login.InvalidCode') + '', type: 'warning' })
+          commit('SET_NEED_MFA', mfaTmp)
+          resolve()
+        })
+      })
+    },
     UserPasswordChangeByCodeCancel({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         commit('SET_CODE', '')
@@ -159,7 +200,6 @@ const user = {
           window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
           resolve(userInfo.username)
         }).catch(err => {
-          console.error(err)
           window.app.$message({ message: window.app.$t('login.' + err.code), type: 'error' })
           // Who care if it doesn't exist
           reject(err)
@@ -174,7 +214,6 @@ const user = {
         // Somehow the getter doesnt have all the functions ?
         Auth.confirmSignIn(cognitoUser, code, mfaType).then(user => {
           cognitoUser = user
-          console.error('GET COGNITOA A')
           commit('SET_COGNITO_USER', cognitoUser)
           if (user && user.signInUserSession) {
             // TODO: Create a session with the UserId / Cognito User validation
@@ -198,7 +237,7 @@ const user = {
               }
               resolve()
             }).catch(error => {
-              try {
+              if (error && error.response) {
                 if (error.response.status === 401) {
                   Message({
                     message: window.app.$t('login.invalidPassword') + ' 2 ',
@@ -206,8 +245,6 @@ const user = {
                     duration: 5 * 1000
                   })
                 }
-              } catch (ef) {
-                console.error(ef.stack)
               }
               reject(error)
             })
@@ -215,14 +252,11 @@ const user = {
             resolve()
           }
         }).catch(e => {
-          console.error('confirmSigninUser EE')
           var Msg = window.app.$t('login.' + e.code)
           if (e.message) {
             Msg = Msg + '[' + e.message + ']'
           }
-          console.error('confirmSigninUser FF')
           window.app.$message({ message: Msg + '', type: 'error' })
-          console.log(e)
           reject(e)
         })
       })
@@ -234,36 +268,22 @@ const user = {
         return new Promise((resolve, reject) => {
           const currentUsername = this.getters.getCognitoUser.username
           Auth.signIn(currentUsername, userInfo.oldPassword).then(function(a) {
-            console.error('GET COGNITOA SIGNING A')
-            console.error('GOT SIGNING')
-            console.error('Calling complete new Pwd')
             cognitoUser = a
             Auth.completeNewPassword(a, userInfo.password, reqAttr).then(user => {
-              console.error('ok auth complted a')
-              console.error(user)
               commit('SET_COGNITO_USER', user)
-              console.error('ok auth complted updating')
               cognitoUser = user
               store.dispatch('LoginByUsername', { username: currentUsername, password: userInfo.password }).then(f => {
-                console.error('will login 1')
-                console.log(user)
-                console.log(f)
                 resolve(user)
               }).catch(err => {
-                console.error('will login error')
-                console.error(err) // should not happend
                 reject(err)
               })
             }).catch(e => {
-              console.error('will login GOT ERR')
-              console.error(e)
               // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
               var Msg = window.app.$t('login.' + e.code)
               if (e.message) {
                 Msg = Msg + '[' + e.message + ']'
               }
               window.app.$message({ message: Msg + '', type: 'error' })
-              console.log(e)
               reject(e)
             })
           }).catch(e => {
@@ -273,65 +293,9 @@ const user = {
             }
             window.app.$message({ message: Msg, type: 'error' })
             // {code: "InvalidPasswordException", name: "InvalidPasswordException", message: "Password does not conform to policy: Password must have symbol characters"}
-            console.log(e)
             reject(e)
           })
-          /*
-          // var self = this
-          console.error('got test')
-          store.dispatch('authenticateUser', { email: 'support@acentera.com', password: '1Lovebeer!' }).then(f => {
-            console.error('got succc')
-            console.error(f)
-            // self['cognito'].actions.changePassword({ currentPassword: 'Hello', newPassword: 'World!' }).then(f => {
-            //   console.error(f)
-            // })
-          }).catch(err => {
-            console.error('got errr login')
-            console.error(err)
-            store.dispatch('forgotPassword', { email: this.getters.getCognitoUser.username }).then(f => { // )'1Lovebeer!', newPassword: '8Lovebeer!' }).then(f => {
-              console.error('got succc1 pw change')
-              console.error(f)
-            }).catch(err => {
-              console.error('err pw change')
-              console.error(err)
-            })
-          })
-          console.error(this.getters.getCognitoUser.storage)
-          var keyPrefix = 'CognitoIdentityServiceProvider.' + this.getters.getCognitoUser.pool.getClientId() + '.' + this.getters.getCognitoUser.username
-          var idTokenKey = keyPrefix + '.idToken'
-          this.getters.getCognitoUser.storage.setItem(idTokenKey, 'null')
-          Auth.changePassword(this.getters.getCognitoUser.username, userInfo.oldPassword, userInfo.password)
-          */
-          /*
-          Auth.currentAuthenticatedUser()
-            .then(user => {
-              if (userInfo.password === userInfo.passwordConfirm) {
-                return Auth.completeNewPassword(user, userInfo.oldPassword, userInfo.password)
-              } else {
-                window.app.$message({ message: window.app.$t('login.passwordMisMatch'), type: 'success' })
-                reject()
-              }
-            })
-            .then(data => {
-              console.error('got change password data')
-              console.log(data)
-              window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully'), type: 'success' })
-              resolve()
-            })
-            .catch(err => {
-              console.error('got change password error')
-              console.log(err)
-              reject(err)
-            })
-          */
         })
-        /*
-        .catch((e) => {
-          console.error(e.code)
-          window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
-          reject(e)
-        })
-        */
       } else {
         return new Promise((resolve, reject) => {
           /*
@@ -374,8 +338,6 @@ const user = {
       const username = userInfo.username.trim()
       return new Promise((resolve, reject) => {
         registerFirstAdmin(username, userInfo.password).then(response => {
-          console.error('OK GOT REGISTER FIRST ADMIN A')
-          console.error(response)
           window.app.$message({ message: window.app.$t('login.adminCreated'), type: 'success' })
           store.dispatch('LogOut').then(() => {
             // location.reload()// In order to re-instantiate the vue-router object to avoid bugs
@@ -385,8 +347,6 @@ const user = {
           })
           resolve()
         }).catch(error => {
-          console.error('OK GOT REGISTER FIRST ERRR ')
-          console.error(error)
           reject(error)
         })
       })
@@ -397,11 +357,11 @@ const user = {
           Auth.forgotPassword(userInfo.username).then(user => {
             window.app.$message({ message: window.app.$t('login.codeSubmitted'), type: 'success' })
             commit('SET_CODE', true)
-            console.error(user)
             resolve(userInfo.username)
           }).catch(err => {
-            console.error(err)
-            window.app.$message({ message: window.app.$t('login.codeSubmitted'), type: 'success' })
+            if (err) {
+              window.app.$message({ message: window.app.$t('login.codeSubmitted'), type: 'success' })
+            }
             // Who care if it doesn't exist
             commit('SET_CODE', true)
             resolve(userInfo.username)
@@ -411,8 +371,6 @@ const user = {
         const username = userInfo.username.trim()
         return new Promise((resolve, reject) => {
           loginForgotPassword(username, userInfo.code).then(response => {
-            console.error('received ')
-            console.error(response)
             window.app.$message({ message: window.app.$t('login.forgotPasswordEmail'), type: 'success' })
             resolve()
           }).catch(error => {
@@ -426,7 +384,6 @@ const user = {
       return new Promise((resolve, reject) => {
         registerByUsernameCode(username, userInfo.password, userInfo.code).then(response => {
           const data = response.data
-          console.error('SET TOKEN OF....' + data.token)
           commit('SET_TOKEN', data.token)
           setToken(data.token)
           const newRefreshTime = Math.round(new Date().getTime() / 1000)
@@ -443,9 +400,7 @@ const user = {
       const username = userInfo.username.trim()
       if (store.getters.isCognitoUser) {
         return new Promise((resolve, reject) => {
-          console.error('GET COGNITOA SIGNING AA')
           Auth.signIn(username, userInfo.password).then(function(a) {
-            console.error('GET COGNITOA SIGNING BB')
             // Ok cognito User now have a Session so we are good
             commit('SET_COGNITO_USER', a)
             cognitoUser = a
@@ -455,22 +410,26 @@ const user = {
               // This also gets called as a dispatch in some other functions to ensure we re-use the same functions
               loginByUsernameThirdParty(cognitoUser.username, 'cognito', a, store.getters.settings.cognito).then(response => {
                 if (response && response.data) {
-                  window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
                   const data = response.data
-                  commit('SET_TOKEN', data.token)
-                  setToken(response.data.token)
-                  // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
-                  // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-                  a.cacheTokens()
-                  cognitoUser = null
-                  commit('SET_COGNITO_USER', {})
-                  const newRefreshTime = Math.round(new Date().getTime() / 1000)
-                  commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-                  setTokenLastRefresh(newRefreshTime)
+                  if (data.status === 'NeedMFA' && data.code) {
+                    commit('SET_NEED_MFA', data)
+                  } else {
+                    commit('SET_TOKEN', data.token)
+                    window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+                    setToken(response.data.token)
+                    // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+                    // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+                    a.cacheTokens()
+                    cognitoUser = null
+                    commit('SET_COGNITO_USER', {})
+                    const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                    commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                    setTokenLastRefresh(newRefreshTime)
+                  }
                 }
                 resolve()
               }).catch(error => {
-                try {
+                if (error && error.response) {
                   if (error.response.status === 401) {
                     Message({
                       message: window.app.$t('login.invalidPassword'),
@@ -478,8 +437,6 @@ const user = {
                       duration: 5 * 1000
                     })
                   }
-                } catch (ef) {
-                  console.error(ef.stack)
                 }
                 reject(error)
               })
@@ -487,8 +444,6 @@ const user = {
               resolve()
             }
           }).catch((e) => {
-            console.error('GET COGNITOA SIGNING CC')
-            console.error(e.code)
             window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
             reject(e)
           })
@@ -507,22 +462,18 @@ const user = {
             }
             resolve()
           }).catch(error => {
-            try {
-              if (!error.response) {
-                Message({
-                  message: window.app.$t('error.ServerTimeout') + '',
-                  type: 'error',
-                  duration: 5 * 1000
-                })
-              } else if (error.response.status === 401) {
-                Message({
-                  message: window.app.$t('login.invalidPassword') + '',
-                  type: 'error',
-                  duration: 5 * 1000
-                })
-              }
-            } catch (ef) {
-              console.error(ef.stack)
+            if (!error || !error.response) {
+              Message({
+                message: window.app.$t('error.ServerTimeout') + '',
+                type: 'error',
+                duration: 5 * 1000
+              })
+            } else if (error.response.status === 401) {
+              Message({
+                message: window.app.$t('login.invalidPassword') + '',
+                type: 'error',
+                duration: 5 * 1000
+              })
             }
             reject(error)
           })
@@ -534,7 +485,6 @@ const user = {
     GetUserInfo({ commit, state }) {
       return new Promise((resolve, reject) => {
         getUserInfo(state.token).then(response => {
-          console.error('getUserInfo here  INFO A')
           if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
             reject('error')
           }
@@ -585,17 +535,13 @@ const user = {
     // 登出
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
-        console.error('calling logout here A')
         logout(state.token).then(() => {
-          console.error('calling logout here B')
           commit('SET_TOKEN', '')
           commit('SET_ADMIN_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_ROLES_ACTIVE', [])
           removeToken()
-          console.error('calling logout here C')
           removeAdminToken()
-          console.error('calling logout here D')
           resolve()
         }).catch(error => {
           reject(error)
@@ -647,7 +593,6 @@ const user = {
           if (found) {
             // Change User Role (ServerSession already contains this role)
             changeUserRole(role).then(getUserInfo().then(response => {
-              console.error('GET UESR INFO A')
               const data = response.data
 
               var lowerCaseRoles = []
@@ -669,8 +614,6 @@ const user = {
           }
         }
         if (!found) {
-          console.error('Need to ask user password')
-
           MessageBox.confirm('Switch to role ' + role + '', 'Confirm your password', {
             confirmButtonText: 'Submit',
             cancelButtonText: 'Cancel',
@@ -679,7 +622,6 @@ const user = {
             inputPlaceholder: 'Enter password here'
           }).then((action) => {
             changeUserRole(role, action.value).then(getUserInfo().then(response => {
-              console.error('GET UESR INFO B')
               const data = response.data
 
               var lowerCaseRoles = []
@@ -697,16 +639,6 @@ const user = {
             )
           })
         }
-        /*
-        getUserInfo(role).then(response => {
-          const data = response.data
-          commit('SET_ROLES', data.roles)
-          commit('SET_NAME', data.name)
-          commit('SET_AVATAR', data.avatar)
-          commit('SET_INTRODUCTION', data.introduction)
-          resolve()
-        })
-        */
       })
     }
   }

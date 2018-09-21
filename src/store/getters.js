@@ -20,7 +20,6 @@ const getters = {
   settings: state => state.settings,
   isCognitoUser: state => {
     try {
-      console.error(state)
       if (state.settings) {
         return !!state.settings.cognito.cognito.IDENTITY_POOL_ID
       }

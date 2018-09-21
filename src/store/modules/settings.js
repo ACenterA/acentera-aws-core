@@ -22,10 +22,10 @@ const settings = {
         URL: 'YOUR_API_GATEWAY_URL'
       },
       cognito: {
-        REGION: 'us-east-1', // 'YOUR_COGNITO_REGION',
-        USER_POOL_ID: 'us-east-1_wCUctuupQ', // 'YOUR_COGNITO_USER_POOL_ID',
-        APP_CLIENT_ID: '1v25fnqa2tve7cj48a665pj4o0', // 'YOUR_COGNITO_APP_CLIENT_ID',
-        IDENTITY_POOL_ID: 'us-east-1:8cd5d86c-246e-4f9b-bd82-a67f42d18e66' // 'YOUR_IDENTITY_POOL_ID'
+        REGION: '', // 'YOUR_COGNITO_REGION',
+        USER_POOL_ID: '', // 'YOUR_COGNITO_USER_POOL_ID',
+        APP_CLIENT_ID: '', // 'YOUR_COGNITO_APP_CLIENT_ID',
+        IDENTITY_POOL_ID: '' // 'YOUR_IDENTITY_POOL_ID'
       }
     }
   },
@@ -42,17 +42,13 @@ const settings = {
     SET_FIRST_TIME: (state, firstTime) => {
       state.firstTime = firstTime
     },
+    SET_MFA: (state, enable) => {
+      state.mfaEnabled = enable
+    },
     SET_PLUGINS: (state, plugins) => {
       state.plugins = plugins
-      console.error('saving state of')
-      console.error(state)
-      console.error(state.plugins)
     },
     SET_MISSING_SITE_ENTRY: (state, entry) => {
-      console.error('stateu  is ')
-      console.error(state)
-      console.error(this)
-      console.error('Updating entry to  ' + entry)
       state.missingSiteEntry = entry
     },
     SET_STACK_URL: (state, stackUrl) => {
@@ -61,8 +57,6 @@ const settings = {
     SET_COGNITO: (state, cognito) => {
       try {
         state.cognito = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
-        console.error('got cognito a')
-        console.error(state.cognito)
 
         if (!state.cognito.s3) {
           state.cognito.s3 = {}
@@ -101,7 +95,9 @@ const settings = {
           }
         })
       } catch (ex) {
-        console.error(ex.stack)
+        if (ex) {
+          console.error(ex)
+        }
       }
     }
   },
@@ -113,20 +109,15 @@ const settings = {
     },
     UpdateSiteSettings({ commit, state }, input) {
       var data = input.data || input
-      console.error('receieved update site stettings')
-      console.error(commit)
-      console.error(data)
       commit('SET_LOADED', true)
       commit('SET_RECAPCHA_KEY', data.recaptchaKey)
       commit('SET_ALLOW_REGISTER', data.allowRegister)
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
       commit('SET_STACK_URL', data.stackUrl)
-      console.error('RECIEVED SETTINGS PLUGIN A')
-      console.error(data)
       commit('SET_PLUGINS', data.plugins)
-
-      commit('SET_COGNITO', data.cognito)
+      commit('SET_MFA', data.mfaEnabled)
+      commit('SET_COGNITO', data.cognito || data.Cognito) // somehow its uppercase?
 
       setSettingsToken(data)
     },
@@ -140,12 +131,13 @@ const settings = {
           if (data) {
             store.dispatch('UpdateSiteSettings', { data }).then(() => {
               hasResolved = true
+              console.error('resolve here a')
               resolve('resolve')
             })
           }
           // We will update based on rest api if needed
           getSiteSettings().then(response => {
-            console.error('recieved et site settings...B')
+            console.error('get info')
             if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
               // Save app Settings ...
               const data = response.data
@@ -159,13 +151,14 @@ const settings = {
             if (!hasResolved) {
               resolve('forced_no_internet_or_cookies')
             }
-          })
-          /*
-          .catch(err => {
+          }).catch(err => {
             if (err) {
               console.error('could not refresh cache')
             }
+            resolve()
           })
+          /*
+
           */
         }
       })

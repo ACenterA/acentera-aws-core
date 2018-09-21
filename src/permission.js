@@ -25,8 +25,6 @@ const whiteList = [
 
 router.beforeEach((to, from, next) => {
   NProgress.start() // start progress bar
-  console.error('received to path')
-  console.error(to.path)
   if (
     to.path.startsWith('/error/') ||
     to.path.startsWith('/4') ||
@@ -41,6 +39,8 @@ router.beforeEach((to, from, next) => {
         next() // {  path: '/error/no_api_access_error', replace: true }) // hack方法 确保addRoutes已完成 ,set the replace: true so the navigation will not leave a history record
         NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
       })
+    } else {
+      next()
     }
   } else {
     store.dispatch('GetSiteSettings').then(res => { // Required for firstTime loging notification in login page and other plugins infos?
@@ -66,24 +66,30 @@ router.beforeEach((to, from, next) => {
                     }
                     store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
                       router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
-                      next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                      store.dispatch('Ready').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                        next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                      })
                     })
                   })
                 } else {
                   store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
                     router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
-
-                    next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
-
                     store.dispatch('LoadPlugins', { roles }).then((routesToAdd) => {
                       if (routesToAdd) {
                         router.addRoutes(routesToAdd)
                       }
+                      store.dispatch('Ready').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                        next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                      })
                     })
                   })
                 }
               } else {
-                next()
+                store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                  console.error('routeChange 01')
+                  console.error(res)
+                  next()
+                })
               }
             }).catch((err) => {
               store.dispatch('FedLogOut').then(() => {
@@ -94,9 +100,31 @@ router.beforeEach((to, from, next) => {
           } else {
             // 没有动态改变权限的需求可直接next() 删除下方权限判断 ↓
             if (hasPermission(store.getters.roles, to.meta.roles)) {
-              next()
+              console.error('test too')
+              var replacedViews = store.getters.getReplacedView
+              console.error('state is vs ')
+              console.error(replacedViews)
+              if (replacedViews[to.path]) {
+                console.error(' AA ')
+                store.dispatch('RouteChangeReplaced').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                  next({ path: replacedViews[to.path], replace: true })
+                })
+                // next()
+              } else {
+                console.error(' BB ')
+                // return currRoute.fullPath
+                console.error()
+                console.error(to)
+                store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                  next()
+                })
+              }
             } else {
-              next({ path: '/401', replace: true, query: { noGoBack: true }})
+              store.dispatch('RouteNotAuthorized').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                console.error('/401 not authorized')
+                console.error(res)
+                next({ path: '/401', replace: true, query: { noGoBack: true }})
+              })
             }
             // 可删 ↑
           }
@@ -104,18 +132,27 @@ router.beforeEach((to, from, next) => {
       } else {
         /* has no token*/
         if (whiteList.indexOf(to.path) !== -1 || to.path.startsWith('/public/')) {
-          next()
+          store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+            next()
+          })
         } else {
           next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
           NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
         }
       }
     }).catch((err) => {
+      console.error(err)
+      store.dispatch('RouteError').then(res => { // Tell an error occured
+        console.error('route error')
+        console.error(res)
+      })
+      /*
       // store.dispatch('FedLogOut').then(() => {
       Message.error(err || 'Verification failed, please login again')
       // next({ path: '/' })
       // })
       NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
+      */
     })
   }
 })

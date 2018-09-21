@@ -61,15 +61,10 @@ export function performTokenRefresh() {
 }
 
 export function refreshToken(config) {
-  console.error('received refreshToken')
-  console.error(config)
   if (config.url === '/user/token/refresh') {
-    console.error('doing ...refresh...already sending')
     return Promise.resolve(config)
   } else {
-    console.error('received refreshToken not in refresh')
     return performTokenRefresh().then(res => { // 拉取user_info
-      console.error('got token resp')
       const data = res.data
       if (data && data.token) {
         store.commit('SET_TOKEN', data.token)

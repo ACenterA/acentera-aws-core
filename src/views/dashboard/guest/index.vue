@@ -1,14 +1,27 @@
 <template>
   <div class="dashboard-editor-container">
     <div class=" clearfix">
-      <pan-thumb :image="avatar" style="float: left"> Your roles:
-        <span v-for="item in roles" :key="item" class="pan-info-roles">{{ item }}</span>
+      <pan-thumb :image="avatar" style="float: left"> Your roles:<br>
+        <span v-for="item in roles" :key="item" class="pan-info-roles"><br>{{ item }}</span>
       </pan-thumb>
       <div class="info-container">
         <span class="display_name">{{ name }}</span>
-        <span style="font-size:20px;padding-top:20px;display:inline-block;">Dashboard</span>
+        <span style="font-size:20px;padding-top:20px;display:inline-block;">Default Dashboard</span>
       </div>
     </div>
+
+    <el-row :gutter="32" style="margin-top:200px">
+      <el-col :xs="24" :sm="24" :lg="8">
+        <div v-if="language == 'en'">
+          Welcome to your Serverless guest portal.
+        </div>
+        <div v-if="language == 'fr'">
+          Bienvenue dans votre portail serverless en tant qu'invité.
+        </div>
+      </el-col>
+      <el-col :xs="24" :sm="24" :lg="8"/>
+      <el-col :xs="24" :sm="24" :lg="8"/>
+    </el-row>
   </div>
 </template>
 

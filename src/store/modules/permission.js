@@ -38,7 +38,13 @@ const permission = {
   state: {
     routers: constantRouterMap,
     addRouters: [],
-    addPlugins: []
+    addPlugins: [],
+    replacedViews: {}
+  },
+  getters: {
+    getReplacedView(state) {
+      return state.replacedViews
+    }
   },
   mutations: {
     SET_ROUTERS: (state, routers) => {
@@ -48,18 +54,25 @@ const permission = {
     ADD_PLUGINS: (state, routers) => {
       state.addPlugins = routers
       state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
+    },
+    SET_REPLACED_VIEW: (state, obj) => {
+      console.error('REPLACE OF' + obj.path)
+      console.error(obj.route)
+      var path = obj.route.path
+      if (obj.route.children) {
+        if (obj.route.children[0].path) {
+          path = path + '/' + obj.route.children[0].path
+        }
+      }
+      state.replacedViews[obj.path] = path
     }
   },
   actions: {
     LoadPlugins({ commit }, data) {
       const { roles } = data
       return new Promise((resolve, reject) => {
-        console.error('settings plugins ...')
-        console.error(store.getters.settings.plugins)
         var lstPromises = []
         for (var v in store.getters.settings.plugins) {
-          console.error('PLUGIN ')
-          console.error(v)
           var basePlugin = '/plugins/'
           var basePluginWithout = ''
           if (window.location.href.indexOf('http://localhost') === 0) {
@@ -72,27 +85,18 @@ const permission = {
           var tmpPluginUrl = basePlugin + v
           var tmpPluginWithoutUrl = basePluginWithout
           var tmpPromise = new Promise((rl, reject) => {
-            console.error('calling ajax of ' + tmpPluginUrl + '/')
             $.ajax({
               url: tmpPluginUrl + '/',
               type: 'get',
               success: function(data) {
-                console.error('recieved html plugin data of')
-                console.error(data)
                 var hasScripts = 0
                 $(data).each(function(l, v) {
-                  console.error('ok')
-                  console.error(l)
-                  console.error(v)
                   var tmp = $(v)
                   if (tmp.attr('src') || tmp.attr('href')) {
                     var lnk = tmp.attr('src') || tmp.attr('href')
-                    console.error('LNK IS ' + lnk + ' vs ' + basePlugin)
                     if (lnk.startsWith('/plugins/')) {
-                      console.error('set lnk to ' + tmpPluginWithoutUrl + lnk)
                       lnk = tmpPluginWithoutUrl + lnk
                     } else {
-                      console.error('2- set lnk to ' + tmpPluginUrl + lnk)
                       lnk = tmpPluginUrl + lnk
                     }
 
@@ -109,7 +113,6 @@ const permission = {
                         scriptAdd++
                         hasScripts = true
                         // TODO: Return from getSettings ?
-                        console.error('add received on load here adding sr of ' + tmp.attr('src'))
                         const script = document.createElement('script')
                         script.type = 'text/javascript'
                         /*
@@ -122,17 +125,11 @@ const permission = {
                         script.src = tmp.attr('src')
                         script.onload = () => {
                           try {
-                            console.error('okok onload')
-                            console.error('A received on load here')
                             scriptAdd--
-                            console.error('B received on load here ' + scriptAdd)
 
                             if (scriptAdd <= 0) {
-                              console.error('test aa')
                               setTimeout(function() {
-                                console.error('test bb')
                                 if (scriptAdd <= 0) {
-                                  console.error('test cc')
                                   rl(true)
                                 }
                               }, 100)
@@ -170,8 +167,6 @@ const permission = {
 
         Promise.all(lstPromises).then(function(rr) {
           // TODO: Check for failed plugins ??
-          console.error('all done ?')
-          console.error(window.asyncTestRouterMapTemp)
           var length = window.asyncTestRouterMapTemp.length
           const asyncTestRouterMap = []
           for (var i = 0; i < length; i++) {
@@ -186,6 +181,14 @@ const permission = {
                   input['component'] = Layout
                 }
               }
+              if (input['replaceDashboard'] === true) {
+                console.error('REPLCE')
+                console.error(input)
+                // replacedViews
+                commit('SET_REPLACED_VIEW', { path: '/dashboard', route: input })
+                // input['path'] = '/dashboard'
+              }
+              // console.error(window.app.$store)
               asyncTestRouterMap.push(input)
             }
           }

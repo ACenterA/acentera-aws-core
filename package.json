@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "build:prod": "cross-env NODE_ENV=production env_config=prod node build/build.js",
+    "embed": "go-bindata -o ../gofaas/static/main.go -pkg static dist/...",
     "build:sit": "cross-env NODE_ENV=production env_config=sit node build/build.js",
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
@@ -66,6 +67,8 @@
     "vue-count-to": "1.0.13",
     "vue-form-wizard": "^0.8.4",
     "vue-i18n": "7.3.2",
+    "vue-qrcode-component": "^2.1.1",
+    "vue-qriously": "^1.1.1",
     "vue-router": "3.0.1",
     "vue-spinner": "^1.0.3",
     "vue-splitpane": "1.0.2",

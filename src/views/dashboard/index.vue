@@ -30,7 +30,6 @@ export default {
       this.$store.dispatch('hideSidebar', true)
       this.currentRole = 'firstAdminDashboard'
     } else {
-      console.error('CALLING SHOW SIDEBAR')
       this.$store.dispatch('showSidebar', true)
       if (!this.roles.includes('admin')) {
         if (!this.roles.includes('editor')) {

@@ -120,8 +120,7 @@ export const constantRouterMap = [
 ]
 
 export default new Router({
-  // mode: 'history', // require service support
-  mode: 'history',
+  mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRouterMap
 })
@@ -183,7 +182,8 @@ export const asyncRouterMap = [
   // chartsRouter,
   // nestedRouter,
   // tableRouter,
-
+*/
+/*
   {
     path: '/example',
     component: Layout,
@@ -228,7 +228,8 @@ export const asyncRouterMap = [
       }
     ]
   },
-
+  */
+  /*
   {
     path: '/error',
     component: Layout,
@@ -367,6 +368,5 @@ export const asyncRouterMap = [
     ]
   },
   */
-
   { path: '*', redirect: '/404', hidden: true }
 ]

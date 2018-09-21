@@ -97,12 +97,9 @@ export default {
       return {}
     },
     isMissingEntry() {
-      console.error('missing a')
       if (this.$store && this.$store.getters && this.$store.getters.settings) {
-        console.error('missing b')
         return this.$store.getters.settings.missingSiteEntry === true
       }
-      console.error('missing c')
       return false
     }
   },

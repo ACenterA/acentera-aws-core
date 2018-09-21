@@ -1,265 +1,331 @@
 <template>
   <div class="login-container">
-    <div v-if="isLoginCodeReset">
-      <el-form ref="codeConfirm" :model="codeConfirm" :rules="codeRules" class="login-form" auto-complete="on" label-position="left">
-        <div class="title-container">
-          <h3 class="title">{{ $t('login.passwordResetCodeConfirm') }}</h3>
-          <lang-select class="set-language"/>
-        </div>
-
-        <el-form-item prop="username">
-          <span class="svg-container">
-            <svg-icon icon-class="user" />
-          </span>
-
-          <el-input
-            v-model="codeConfirm.username"
-            :placeholder="$t('login.username')"
-            name="username"
-            type="text"
-            auto-complete="on"
-            readonly
-          />
-        </el-form-item>
-
-        <el-form-item prop="password">
-          <span class="svg-container">
-            <svg-icon icon-class="password" />
-          </span>
-          <el-input
-            :type="passwordType"
-            v-model="codeConfirm.password"
-            :placeholder="$t('login.newPassword')"
-            name="password"
-            auto-complete="on"
-            @keyup.enter.native="handleCodeConfirmChange" />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon icon-class="eye" />
-          </span>
-        </el-form-item>
-
-        <el-form-item prop="code">
-          <span class="svg-container">
-            <svg-icon icon-class="password" />
-          </span>
-          <el-input
-            :type="text"
-            v-model="codeConfirm.code"
-            :placeholder="$t('login.code')"
-            name="code"
-            auto-complete="on"
-            @keyup.enter.native="handleCodeConfirmChange" />
-        </el-form-item>
-
-        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCodeConfirmChange">{{ $t('login.updatePassword') }}</el-button>
-        <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCancelCode">{{ $t('login.cancelUpdate') }}</el-button>
-      </el-form>
-    </div>
-    <div v-if="!isLoginCodeReset && getCognitoUser">
-
-      <div v-if="getCognitoUser.signInUserSession || !getCognitoUser.signInUserSession">
-        <!-- Loading ... -->
-        <el-form class="login-form" label-position="left">
-          <div class="center" style="margin-top:50px;display: table; margin:auto">
-            <self-building-square-spinner
-              :animation-duration="6000"
-              :size="40"
-              color="#ffffff"
-            />
-          </div>
-        </el-form>
-      </div>
-      <div v-if="!getCognitoUser.signInUserSession">
-        <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
-          <div v-if="!getCognitoUser.signInUserSession && getCognitoUser.challengeName == 'SMS_MFA'">
-            <div class="title-container">
-              <h3 class="title">{{ $t('login.mfaTitleSms') }}</h3>
-              <lang-select class="set-language"/>
-            </div>
-
-            <el-form-item prop="code">
-              <span class="svg-container">
-                <svg-icon icon-class="password" />
-              </span>
-              <el-input
-                :type="text"
-                v-model="codeConfirm.code"
-                :placeholder="$t('login.code')"
-                name="code"
-                auto-complete="on"
-                @keyup.enter.native="handleCodeConfirmation" />
-            </el-form-item>
-
-            <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCodeConfirmation">{{ $t('login.validateCode') }}</el-button>
-            <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
-          </div>
-
-          <div v-if="getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED'">
-            <div class="title-container">
-              <h3 class="title">{{ $t('login.passwordChangeTitle') }}</h3>
-              <lang-select class="set-language"/>
-            </div>
-
-            <el-form-item prop="oldPassword">
-              <span class="svg-container">
-                <svg-icon icon-class="password" />
-              </span>
-
-              <el-input
-                :type="passwordType"
-                v-model="passwordChangeForm.oldPassword"
-                :placeholder="$t('login.oldPassword')"
-                name="password"
-                auto-complete="on"
-                @keyup.enter.native="handlePasswordChange" />
-              <span class="show-pwd" @click="showPwd">
-                <svg-icon icon-class="eye" />
-              </span>
-            </el-form-item>
-
-            <el-form-item prop="password">
-              <span class="svg-container">
-                <svg-icon icon-class="password" />
-              </span>
-              <el-input
-                :type="passwordType"
-                v-model="passwordChangeForm.password"
-                :placeholder="$t('login.password')"
-                name="password"
-                auto-complete="on"
-                @keyup.enter.native="handlePasswordChange" />
-              <span class="show-pwd" @click="showPwd">
-                <svg-icon icon-class="eye" />
-              </span>
-            </el-form-item>
-
-            <el-form-item prop="passwordConfirm">
-              <span class="svg-container">
-                <svg-icon icon-class="password" />
-              </span>
-              <el-input
-                :type="passwordType"
-                v-model="passwordChangeForm.passwordConfirm"
-                :placeholder="$t('login.passwordConfirm')"
-                name="password"
-                auto-complete="on"
-                @keyup.enter.native="handlePasswordChange" />
-              <span class="show-pwd" @click="showPwd">
-                <svg-icon icon-class="eye" />
-              </span>
-            </el-form-item>
-
-            <el-form-item v-for="(v, index) in getChallengeParam" :key="v" prop=":v">
-              <span class="svg-container"/>
-              <el-input
-                :idx="index"
-                :type="text"
-                v-model="requiredAttributes[v]"
-                :value="requiredAttributes[v]"
-                :placeholder="v"
-                auto-complete="on"
-                name="v"
-                @keyup.enter.native="handlePasswordChange" />
-            </el-form-item>
-
-            <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChange">{{ $t('login.updatePassword') }}</el-button>
-            <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
-
-          </div>
-
-        </el-form>
-      </div>
-    </div>
-    <div v-if="!isLoginCodeReset && !getCognitoUser">
-      BBBB
-      <div v-if="isMissingEntry">
-        <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
-          <div class="title-container">
-            <lang-select class="set-language"/>
-            <br><br><br>
-            <h3 class="title">{{ $t('login.siteConfigError') }}</h3>
-          </div>
-        </el-form>
-      </div>
+    <div v-if="isMissingEntry">
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
-          <h3 class="title">{{ $t('login.title') }}</h3>
           <lang-select class="set-language"/>
+          <br><br><br>
+          <h3 class="title">{{ $t('login.siteConfigError') }}</h3>
         </div>
-
-        <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
-          <h5 v-if="isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeCognito') }}</h5>
-          <h5 v-if="!isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeNonCognito') }}</h5>
-          <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
-          <a :href="settings.stackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
-        </div>
-
-        <el-form-item prop="username">
-          <span class="svg-container svg-container_login">
-            <svg-icon icon-class="user" />
-          </span>
-          <el-input
-            v-model="loginForm.username"
-            :placeholder="$t('login.username')"
-            name="username"
-            type="text"
-            auto-complete="on"
-          />
-        </el-form-item>
-
-        <el-form-item prop="password">
-          <span class="svg-container">
-            <svg-icon icon-class="password" />
-          </span>
-          <el-input
-            :type="passwordType"
-            v-model="loginForm.password"
-            :placeholder="$t('login.password')"
-            name="password"
-            auto-complete="on"
-            @keyup.enter.native="handleLogin" />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon icon-class="eye" />
-          </span>
-        </el-form-item>
-
-        <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
-        <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
-        <el-button v-if="!settings.firstTime && activeName=='Login'" :loading="loading" type="" style="width:100%;" @click.native.prevent="changeTo('Forgot')">{{ $t('login.forgotPassword') }}</el-button>
-
-        <div class="tips" style="margin-top:30px"/>
-        <el-button v-if="settings.allowRegister && activeName=='Login'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
-        <el-button v-if="activeName=='Register'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
-        <el-button :loading="loading" type="primary" style="display:none;width:30%;margin-bottom:30px;float: right;" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
-
       </el-form>
+    </div>
+    <div v-if="!isMissingEntry">
+      <div v-if="isLoginCodeReset">
+        <el-form ref="codeConfirm" :model="codeConfirm" :rules="codeRules" class="login-form" auto-complete="on" label-position="left">
+          <div class="title-container">
+            <h3 class="title">{{ $t('login.passwordResetCodeConfirm') }}</h3>
+            <lang-select class="set-language"/>
+          </div>
 
-      <el-form v-if="activeName=='Forgot'" ref="loginForm" :model="loginForm" :rules="forgetPasswordRules" class="login-form" auto-complete="on" label-position="left">
-        <div class="title-container">
-          <h3 class="title">{{ $t('login.titleForgetPassword') }}</h3>
-          <lang-select class="set-language"/>
+          <el-form-item prop="username">
+            <span class="svg-container">
+              <svg-icon icon-class="user" />
+            </span>
+
+            <el-input
+              v-model="codeConfirm.username"
+              :placeholder="$t('login.username')"
+              name="username"
+              type="text"
+              auto-complete="on"
+              readonly
+            />
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <span class="svg-container">
+              <svg-icon icon-class="password" />
+            </span>
+            <el-input
+              :type="passwordType"
+              v-model="codeConfirm.password"
+              :placeholder="$t('login.newPassword')"
+              name="password"
+              auto-complete="on"
+              @keyup.enter.native="handleCodeConfirmChange" />
+            <span class="show-pwd" @click="showPwd">
+              <svg-icon icon-class="eye" />
+            </span>
+          </el-form-item>
+
+          <el-form-item prop="code">
+            <span class="svg-container">
+              <svg-icon icon-class="password" />
+            </span>
+            <el-input
+              v-model="codeConfirm.code"
+              :placeholder="$t('login.code')"
+              type="text"
+              name="code"
+              auto-complete="on"
+              @keyup.enter.native="handleCodeConfirmChange" />
+          </el-form-item>
+
+          <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCodeConfirmChange">{{ $t('login.updatePassword') }}</el-button>
+          <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCancelCode">{{ $t('login.cancelUpdate') }}</el-button>
+        </el-form>
+      </div>
+      <div v-if="!isLoginCodeReset && getCognitoUser">
+        <div v-if="needMFARegistration">
+          <el-form class="login-form forcewhite" label-position="left">
+            <div class="title-container">
+              <h3 class="title black">{{ $t('login.mfaRegisterRequired') }}</h3>
+              <lang-select class="set-language"/>
+            </div>
+
+            <div class="center" style="margin-top:50px;display: table; margin:auto">
+              <qr-code
+                :text="needMFARegistrationStr"
+                :size="mfaSize"
+                color="#000000"
+                bg-color="#ffffff"
+                error-level="L"/>
+            </div>
+
+            <br><br><br><br>
+
+            <el-form-item prop="code" class="forceblack">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
+              <el-input
+                v-model="needMFARegistration"
+                type="text"
+                class="forceblack"
+                name="mfastr"
+                auto-complete="on"
+                readonly
+              />
+            </el-form-item>
+            <br>
+            <el-form-item prop="code" class="forceblack">
+              <span class="svg-container">
+                <svg-icon icon-class="password" />
+              </span>
+              <el-input
+                v-model="codeConfirm.code"
+                :placeholder="$t('login.codeSoftware')"
+                type="text"
+                class="forceblack"
+                name="code"
+                auto-complete="on"
+                @keyup.enter.native="handleAssignDeviceConfirm" />
+            </el-form-item>
+            <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleAssignDeviceConfirm">{{ $t('login.mfaRegisterSubmit') }}</el-button>
+            <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
+          </el-form>
+
         </div>
 
-        <el-form-item prop="username">
-          <span class="svg-container svg-container_login">
-            <svg-icon icon-class="user" />
-          </span>
-          <el-input
-            v-model="loginForm.username"
-            :placeholder="$t('login.username')"
-            name="username"
-            type="text"
-            auto-complete="on"
-          />
-        </el-form-item>
+        <div v-if="!needMFARegistration && loading && (getCognitoUser.signInUserSession || !(getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED' || getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'))">
+          <!-- Loading ... -->
+          <el-form class="login-form" label-position="left">
+            <div class="center" style="margin-top:50px;display: table; margin:auto">
+              <self-building-square-spinner
+                :animation-duration="6000"
+                :size="40"
+                color="#ffffff"
+              />
+            </div>
+          </el-form>
+        </div>
+        <div v-if="!getCognitoUser.signInUserSession">
+          <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
+            <div v-if="!getCognitoUser.signInUserSession && (getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA')">
+              <div class="title-container">
+                <h3 v-if="getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'" class="title">{{ $t('login.mfaTitleToken') }}</h3>
+                <h3 v-if="getCognitoUser.challengeName == 'SMS_MFA'" class="title">{{ $t('login.mfaTitleSms') }}</h3>
+                <lang-select class="set-language"/>
+              </div>
 
-        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:10px;" @click.native.prevent="handleForgotPassword">{{ $t('login.forgotPassword') }}</el-button>
+              <el-form-item v-if="getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'" prop="codesoftware">
+                <span class="svg-container">
+                  <svg-icon icon-class="password" />
+                </span>
+                <el-input
+                  v-model="codeConfirm.code"
+                  :placeholder="$t('login.codeSoftware')"
+                  type="text"
+                  name="code"
+                  auto-complete="on"
+                  @keyup.enter.native="handleCodeConfirmation" />
+              </el-form-item>
 
-        <div class="tips"/>
-        <el-button v-if="settings.allowRegister" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
-        <el-button :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: right;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+              <el-form-item v-if="getCognitoUser.challengeName == 'SMS_MFA'" prop="code">
+                <span class="svg-container">
+                  <svg-icon icon-class="password" />
+                </span>
+                <el-input
+                  v-model="codeConfirm.code"
+                  :placeholder="$t('login.code')"
+                  type="text"
+                  name="code"
+                  auto-complete="on"
+                  @keyup.enter.native="handleCodeConfirmation" />
+              </el-form-item>
 
-      </el-form>
+              <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCodeConfirmation">{{ $t('login.validateCode') }}</el-button>
+              <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
+            </div>
+
+            <div v-if="getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED'">
+              <div class="title-container">
+                <h3 class="title">{{ $t('login.passwordChangeTitle') }}</h3>
+                <lang-select class="set-language"/>
+              </div>
+
+              <el-form-item prop="oldPassword">
+                <span class="svg-container">
+                  <svg-icon icon-class="password" />
+                </span>
+
+                <el-input
+                  :type="passwordType"
+                  v-model="passwordChangeForm.oldPassword"
+                  :placeholder="$t('login.oldPassword')"
+                  name="password"
+                  auto-complete="on"
+                  @keyup.enter.native="handlePasswordChange" />
+                <span class="show-pwd" @click="showPwd">
+                  <svg-icon icon-class="eye" />
+                </span>
+              </el-form-item>
+
+              <el-form-item prop="password">
+                <span class="svg-container">
+                  <svg-icon icon-class="password" />
+                </span>
+                <el-input
+                  :type="passwordType"
+                  v-model="passwordChangeForm.password"
+                  :placeholder="$t('login.newPpassword')"
+                  name="password"
+                  auto-complete="on"
+                  @keyup.enter.native="handlePasswordChange" />
+                <span class="show-pwd" @click="showPwd">
+                  <svg-icon icon-class="eye" />
+                </span>
+              </el-form-item>
+
+              <el-form-item prop="passwordConfirm">
+                <span class="svg-container">
+                  <svg-icon icon-class="password" />
+                </span>
+                <el-input
+                  :type="passwordType"
+                  v-model="passwordChangeForm.passwordConfirm"
+                  :placeholder="$t('login.passwordConfirm')"
+                  name="password"
+                  auto-complete="on"
+                  @keyup.enter.native="handlePasswordChange" />
+                <span class="show-pwd" @click="showPwd">
+                  <svg-icon icon-class="eye" />
+                </span>
+              </el-form-item>
+
+              <el-form-item v-for="(v, index) in getChallengeParam" :key="v" prop=":v">
+                <span class="svg-container"/>
+                <el-input
+                  :idx="index"
+                  v-model="requiredAttributes[v]"
+                  :value="requiredAttributes[v]"
+                  :placeholder="$t('login.' + v)"
+                  type="text"
+                  auto-complete="on"
+                  name="v"
+                  @keyup.enter.native="handlePasswordChange" />
+              </el-form-item>
+
+              <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChange">{{ $t('login.updatePassword') }}</el-button>
+              <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
+
+            </div>
+          </el-form>
+        </div>
+      </div>
+      <div v-if="!isLoginCodeReset && !getCognitoUser">
+        <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+          <div class="title-container">
+            <h3 class="title">{{ $t('login.title') }}</h3>
+            <lang-select class="set-language"/>
+          </div>
+
+          <div v-if="settings.firstTime" class="title-container" style="text-align:center;margin-bottom:30px;">
+            <h5 v-if="isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeCognito') }}</h5>
+            <h5 v-if="!isCognitoConfigured" class="titleFirstTime">{{ $t('login.firstTimeNonCognito') }}</h5>
+            <h5 class="titleFirstTime">{{ $t('login.passwordOutput') }}</h5>
+            <a :href="settings.stackUrl" style="text-align:center;margin:auto;width:auto;" target="_blank" class="titleFirstTime">{{ $t('login.clickHere') }}</a>
+          </div>
+
+          <el-form-item prop="username">
+            <span class="svg-container svg-container_login">
+              <svg-icon icon-class="user" />
+            </span>
+            <el-input
+              v-model="loginForm.username"
+              :placeholder="$t('login.username')"
+              name="username"
+              type="text"
+              auto-complete="on"
+            />
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <span class="svg-container">
+              <svg-icon icon-class="password" />
+            </span>
+            <el-input
+              :type="passwordType"
+              v-model="loginForm.password"
+              :placeholder="$t('login.password')"
+              name="password"
+              auto-complete="on"
+              @keyup.enter.native="handleLogin" />
+            <span class="show-pwd" @click="showPwd">
+              <svg-icon icon-class="eye" />
+            </span>
+          </el-form-item>
+
+          <!-- MFA done in 2nd step -->
+
+          <el-button v-if="activeName=='Login'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
+          <el-button v-if="activeName=='Register'" :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegister">{{ $t('login.signUp') }}</el-button>
+          <el-button v-if="!settings.firstTime && activeName=='Login'" :loading="loading" type="" style="width:100%;" @click.native.prevent="changeTo('Forgot')">{{ $t('login.forgotPassword') }}</el-button>
+
+          <div class="tips" style="margin-top:30px"/>
+          <el-button v-if="settings.allowRegister && activeName=='Login'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
+          <el-button v-if="activeName=='Register'" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+          <el-button :loading="loading" type="primary" style="display:none;width:30%;margin-bottom:30px;float: right;" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
+
+        </el-form>
+
+        <el-form v-if="activeName=='Forgot'" ref="loginForm" :model="loginForm" :rules="forgetPasswordRules" class="login-form" auto-complete="on" label-position="left">
+          <div class="title-container">
+            <h3 class="title">{{ $t('login.titleForgetPassword') }}</h3>
+            <lang-select class="set-language"/>
+          </div>
+
+          <el-form-item prop="username">
+            <span class="svg-container svg-container_login">
+              <svg-icon icon-class="user" />
+            </span>
+            <el-input
+              v-model="loginForm.username"
+              :placeholder="$t('login.username')"
+              name="username"
+              type="text"
+              auto-complete="on"
+            />
+          </el-form-item>
+
+          <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:10px;" @click.native.prevent="handleForgotPassword">{{ $t('login.forgotPassword') }}</el-button>
+
+          <div class="tips"/>
+          <el-button v-if="settings.allowRegister" :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: left;" @click.native.prevent="changeTo('Register')">{{ $t('login.signUp') }}</el-button>
+          <el-button :loading="loading" type="secondary" style="width:auto;margin-bottom:30px;float: right;" @click.native.prevent="changeTo('Login')">{{ $t('login.logIn') }}</el-button>
+
+        </el-form>
+      </div>
     </div>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog" append-to-body>
@@ -277,6 +343,7 @@ import { isvalidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import { mapGetters } from 'vuex'
 import { SelfBuildingSquareSpinner } from 'epic-spinners'
+import VueQRCodeComponent from 'vue-qrcode-component'
 
 // TODO: This was made to simply implement all temporary features
 //       We should add components for various actions that would be cleaner and easier to read
@@ -285,7 +352,8 @@ export default {
   name: 'Login',
   components: {
     LangSelect,
-    SelfBuildingSquareSpinner
+    SelfBuildingSquareSpinner,
+    'qr-code': VueQRCodeComponent
   },
   data() {
     const activeName = 'Login'
@@ -351,7 +419,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['getCognitoUser', 'isLoginCodeReset']),
+    ...mapGetters(['needMFARegistrationStr', 'needMFARegistration', 'getCognitoUser', 'isLoginCodeReset']),
+    mfaSize() {
+      return 130
+    },
     getChallengeParam: function() {
       var reqAtt = this.getCognitoUser.challengeParam.requiredAttributes || []
       return this.updateRequiredAttributes(reqAtt)
@@ -372,12 +443,9 @@ export default {
       return {}
     },
     isMissingEntry() {
-      console.error('missing a')
       if (this.$store && this.$store.getters && this.$store.getters.settings) {
-        console.error('missing b')
         return this.$store.getters.settings.missingSiteEntry === true
       }
-      console.error('missing c')
       return false
     }
   },
@@ -432,6 +500,25 @@ export default {
         this.loading = false
       })
     },
+    handleAssignDeviceConfirm() {
+      this.loading = true
+      var mfa = {
+        code: this.codeConfirm.code,
+        secret: this.needMFARegistration,
+        url: this.needMFARegistrationStr
+      }
+
+      this.$store.dispatch('UserAssignDeviceConfirmation', mfa).then(() => {
+        this.resetForm()
+        this.$router.push({ path: this.redirect || '/' })
+        var self = this
+        setTimeout(function() {
+          self.loading = false
+        }, 2000)
+      }).catch(() => {
+        this.loading = false
+      })
+    },
     handleCodeConfirmation() {
       this.loading = true
       var mfa = {
@@ -453,8 +540,6 @@ export default {
       this.$refs.codeConfirm.validate(valid => {
         if (valid) {
           this.loading = true
-          console.error('sending of')
-          console.error(this.codeConfirm)
           this.$store.dispatch('UserPasswordChangeByCode', this.codeConfirm).then(() => {
             this.resetForm()
             this.$router.push({ path: this.redirect || '/' })
@@ -488,9 +573,6 @@ export default {
       this.$refs.passwordChangeForm.validate(valid => {
         if (valid) {
           this.loading = true
-          console.error('sending passwrdo fhagne')
-          console.error(this.passwordChangeForm)
-          console.error(this.requiredAttributes)
           this.$store.dispatch('UserPasswordChange', { password: this.passwordChangeForm, attributes: this.requiredAttributes }).then(() => {
             this.resetForm()
             this.$router.push({ path: this.redirect || '/' })
@@ -545,8 +627,6 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('LoginForgotPassword', this.loginForm).then((kk) => {
-            console.error('hande login aa')
-            console.error(kk)
             this.resetForm()
             this.changeTo('Login')
             this.loading = false
@@ -726,6 +806,21 @@ $break-large: 700px;
       margin: 10px auto;
     }
   }
+}
+.forceblack input::placeholder {
+    color: black;
+    opacity: 1; /* Firefox */
+}
+.forcewhite {
+  background-color: white;
+  color: black!important;
+}
+
+.black {
+  color: black!important;
+}
+.el-form-item.forceblack {
+  background-color:black!important;
 }
 
 </style>
