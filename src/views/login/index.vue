@@ -1,6 +1,7 @@
 <template>
   <div class="login-container">
     <div v-if="isMissingEntry">
+      <!-- missing entry -->
       <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
           <lang-select class="set-language"/>
@@ -10,7 +11,9 @@
       </el-form>
     </div>
     <div v-if="!isMissingEntry">
+      <!-- !missing entry - 1 -->
       <div v-if="isLoginCodeReset">
+        <!-- isLoginCodeReset -->
         <el-form ref="codeConfirm" :model="codeConfirm" :rules="codeRules" class="login-form" auto-complete="on" label-position="left">
           <div class="title-container">
             <h3 class="title">{{ $t('login.passwordResetCodeConfirm') }}</h3>
@@ -65,7 +68,9 @@
           <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleCancelCode">{{ $t('login.cancelUpdate') }}</el-button>
         </el-form>
       </div>
+      <!-- !missing entry - 2 -->
       <div v-if="!isLoginCodeReset && getCognitoUser">
+        <!-- !isLoginCodeReset && getCognitoUser -->
         <div v-if="needMFARegistration">
           <el-form class="login-form forcewhite" label-position="left">
             <div class="title-container">
@@ -130,6 +135,7 @@
           </el-form>
         </div>
         <div v-if="!getCognitoUser.signInUserSession">
+          <!-- !getCognitoUser.signInUserSession -->
           <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
             <div v-if="!getCognitoUser.signInUserSession && (getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA')">
               <div class="title-container">
@@ -244,6 +250,7 @@
         </div>
       </div>
       <div v-if="!isLoginCodeReset && !getCognitoUser">
+        <!-- !isLoginCodeReset && !getCognitoUser -->
         <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
           <div class="title-container">
             <h3 class="title">{{ $t('login.title') }}</h3>

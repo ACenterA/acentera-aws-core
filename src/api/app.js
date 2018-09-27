@@ -9,3 +9,10 @@ export function getSiteSettings() {
     maxAge: 15 * 60 * 1000
   })
 }
+
+export function getSiteConfiguration(token) {
+  return request({
+    url: '/app/configuration',
+    method: 'get'
+  })
+}

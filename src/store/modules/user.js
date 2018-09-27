@@ -8,6 +8,7 @@ import Cookies from 'js-cookie'
 
 import store from '@/store'
 import { MessageBox, Message } from 'element-ui' // Message
+// import { setCognitoUserInfo, setCredentials, getCredentials, getCognitoUser, getAdminToken, removeAdminToken, getToken, setToken, removeToken, setTokenLastRefresh } from '@/utils/auth'
 import { getAdminToken, removeAdminToken, getToken, setToken, removeToken, setTokenLastRefresh } from '@/utils/auth'
 
 // import { AmazonCognitoIdentity, CognitoUserPool, CognitoUserAttribute, CognitoUser } from 'amazon-cognito-identity-js'
@@ -35,19 +36,21 @@ const user = {
     status: '',
     code: '',
     needRegisterMFA: '',
+    credentials: '',
     needRegisterMFAStr: '',
     lastTokenRefresh: 0,
     token: getToken(),
     admin_token: getAdminToken(),
     name: '',
     avatar: '',
+    AWS: '',
     introduction: '',
     roles_active: [], // List of current activated roles
     roles: [], // List of available roles for this user
     setting: {
       articlePlatform: []
     },
-    cognito: null
+    cognito: null // getCognitoUser()
   },
 
   mutations: {
@@ -90,9 +93,25 @@ const user = {
       state.roles_active = (roles || []).slice() // Clone the object
     },
     SET_COGNITO_USER: (state, cognitoUser) => {
+      if (state.cognito && (cognitoUser && !cognitoUser.cacheTokens)) {
+        if (state.cognito.cacheTokens) {
+          state.cognito.cacheTokens()
+        }
+      }
       state.cognito = cognitoUser
+      // setCognitoUserInfo(cognitoUser)
+    },
+    SET_CREDS: (state, creds) => {
+      console.error('SET CRED CALLED')
+      console.error(creds)
+      if (creds === '') {
+        // No creds
+        state.credentials = null
+      } else {
+        state.credentials = creds
+      }
+      // setCredentials(creds)
     }
-
   },
   getters: {
     needMFARegistration(state) {
@@ -142,6 +161,18 @@ const user = {
         context.commit('auth/setAuthenticationError', err, { root: true })
       }
     },
+    GET_CREDENTIALS({ commit }) {
+      return new Promise((resolve, reject) => {
+        Auth.currentUserCredentials().then(function(ff) {
+          commit('SET_CREDS', ff)
+          resolve(ff)
+        }).catch((ex) => {
+          // maybe not cognito authenticated ?
+          console.error(ex.stack)
+          resolve(ex)
+        })
+      })
+    },
     UserAssignDeviceConfirmation({ commit }, mfaInfo) {
       return new Promise((resolve, reject) => {
         var mfaTmp = {
@@ -160,9 +191,9 @@ const user = {
             commit('SET_TOKEN', data.token)
             // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
             // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-            cognitoUser.cacheTokens()
-            cognitoUser = null
-            commit('SET_COGNITO_USER', {})
+            // cognitoUser.cacheTokens()
+            // cognitoUser = null
+            // commit('SET_COGNITO_USER', '')
 
             setToken(response.data.token)
             const newRefreshTime = Math.round(new Date().getTime() / 1000)
@@ -219,6 +250,10 @@ const user = {
             // TODO: Create a session with the UserId / Cognito User validation
             loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
               if (response && response.data) {
+                Auth.currentCredentials().then(credentials => {
+                  commit('SET_CREDS', Auth.essentialCredentials(credentials))
+                })
+
                 window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
                 const data = response.data
                 commit('SET_TOKEN', data.token)
@@ -226,9 +261,9 @@ const user = {
                 // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
                 // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
 
-                cognitoUser.cacheTokens()
-                cognitoUser = null
-                commit('SET_COGNITO_USER', {})
+                // cognitoUser.cacheTokens()
+                // cognitoUser = null
+                // commit('SET_COGNITO_USER', '')
 
                 setToken(response.data.token)
                 const newRefreshTime = Math.round(new Date().getTime() / 1000)
@@ -395,9 +430,30 @@ const user = {
         })
       })
     },
-
+    LoginByUsernameWebapp({ commit }, userInfo) {
+      const username = userInfo.username.trim()
+      return new Promise((resolve, reject) => {
+        loginByUsername(username, userInfo.password).then(response => {
+          if (response && response.data) {
+            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+            const data = response.data
+            commit('SET_TOKEN', data.token)
+            setToken(response.data.token)
+            const newRefreshTime = Math.round(new Date().getTime() / 1000)
+            commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+            setTokenLastRefresh(newRefreshTime)
+          }
+          resolve()
+        }).catch((err) => {
+          reject(err)
+        })
+      })
+    },
     LoginByUsername({ commit }, userInfo) {
       const username = userInfo.username.trim()
+      // TODO: Since we want to support both cognito and non cognioto users
+      // we should separate this function with a LoginByUsernameWebapp
+      // if the cognito login fails, and that the project has isCogito enabled we fallback to that LoginByUsernameWebapp
       if (store.getters.isCognitoUser) {
         return new Promise((resolve, reject) => {
           Auth.signIn(username, userInfo.password).then(function(a) {
@@ -416,12 +472,17 @@ const user = {
                   } else {
                     commit('SET_TOKEN', data.token)
                     window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+
+                    Auth.currentCredentials().then(credentials => {
+                      commit('SET_CREDS', Auth.essentialCredentials(credentials))
+                    })
+
                     setToken(response.data.token)
                     // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
                     // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-                    a.cacheTokens()
-                    cognitoUser = null
-                    commit('SET_COGNITO_USER', {})
+                    // a.cacheTokens()
+                    // cognitoUser = null
+                    // commit('SET_COGNITO_USER', '')
                     const newRefreshTime = Math.round(new Date().getTime() / 1000)
                     commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
                     setTokenLastRefresh(newRefreshTime)
@@ -444,22 +505,23 @@ const user = {
               resolve()
             }
           }).catch((e) => {
-            window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
-            reject(e)
+            this.$store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
+              // All Good non cognito User
+              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
+              resolve()
+            }).catch((err) => {
+              if (err && e) {
+                window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })
+              }
+              reject(e)
+            })
           })
         })
       } else {
         return new Promise((resolve, reject) => {
-          loginByUsername(username, userInfo.password).then(response => {
-            if (response && response.data) {
-              window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-              const data = response.data
-              commit('SET_TOKEN', data.token)
-              setToken(response.data.token)
-              const newRefreshTime = Math.round(new Date().getTime() / 1000)
-              commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-              setTokenLastRefresh(newRefreshTime)
-            }
+          this.$store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
+            // All Good
+            window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
             resolve()
           }).catch(error => {
             if (!error || !error.response) {
@@ -485,11 +547,13 @@ const user = {
     GetUserInfo({ commit, state }) {
       return new Promise((resolve, reject) => {
         getUserInfo(state.token).then(response => {
+          console.error('Received getUserInfo RESP')
+          console.error(response)
           if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
             reject('error')
           }
           const data = response.data
-
+          console.error('Received getUserInfo RESP - 1 ')
           if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
             var lowerCaseRoles = []
             var roleLen = data.roles.length
@@ -501,7 +565,7 @@ const user = {
           } else {
             reject('getInfo: roles must be a non-null array !')
           }
-
+          console.error('Received getUserInfo RESP - 2 ')
           if (!Cookies.get('language')) {
             if (data.language) {
               commit('SET_LANGUAGE', data.language)
@@ -511,8 +575,10 @@ const user = {
           commit('SET_NAME', data.name)
           commit('SET_AVATAR', data.avatar || 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif')
           commit('SET_INTRODUCTION', data.introduction)
+          console.error('Received getUserInfo RESP - 3 ')
           resolve(response)
         }).catch(error => {
+          console.error('Received getUserInfo REJECTING - 1 ')
           reject(error)
         })
       })
@@ -537,6 +603,8 @@ const user = {
       return new Promise((resolve, reject) => {
         logout(state.token).then(() => {
           commit('SET_TOKEN', '')
+          commit('SET_CREDS', '')
+          commit('SET_COGNITO_USER', '')
           commit('SET_ADMIN_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_ROLES_ACTIVE', [])
@@ -549,10 +617,15 @@ const user = {
       })
     },
 
-    // 前端 登出
+    // This should be only a fed logout to signout from google, facebook, cognito etc?
     FedLogOut({ commit }) {
       return new Promise(resolve => {
         commit('SET_TOKEN', '')
+        commit('SET_CREDS', '')
+        commit('SET_COGNITO_USER', '')
+        commit('SET_ADMIN_TOKEN', '')
+        commit('SET_ROLES', [])
+        commit('SET_ROLES_ACTIVE', [])
         removeToken()
         removeAdminToken()
         resolve()

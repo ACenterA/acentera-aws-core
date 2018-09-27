@@ -51,23 +51,28 @@ const configHandler = function(config) {
     config.headers['X-Version'] = getVersion()
     var currentTime = Math.round(new Date().getTime() / 1000)
     var playload = JSON.parse(atob(getToken().split('.')[1]))
-    var tokenExpirationTime = playload.exp
+    // var tokenExpirationTime = playload.exp
     var tokenDuration = playload.exp - playload.iat
-
     // Refresh token every X iterations 25% of expiration time
-    const refreshTime = tokenDuration * 25 / 100
+    const refreshTime = tokenDuration * 25 / 100 // not really used
 
     var refreshIfMinimumOf = tokenDuration - refreshTime
     if (refreshIfMinimumOf <= 300) {
       refreshIfMinimumOf = 300
     }
-
+    if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
+      refreshIfMinimumOf = 3500
+    }
     var lastTokenRefresh = getTokenLastRefresh()
-    if (Math.abs(currentTime - lastTokenRefresh) >= 300) {
+    // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
+    // console.error((tokenExpirationTime - currentTime))
+    // console.error(Math.abs(currentTime - lastTokenRefresh))
+    if ((Math.abs(currentTime - lastTokenRefresh) >= 3500)) { // every hour for now, due to cognito
+      store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
       store.dispatch('UpdateRefreshTime', currentTime).then(() => {
-        if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
-          return refreshToken(config)
-        }
+        // if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
+        return refreshToken(config)
+        // }
       })
     }
   }
@@ -123,6 +128,7 @@ const handleError = function(error, test) {
   // Also sessions does auto-expires if left over on the server side or on password / role changes
   var config = null
   var resp = null
+  console.error('received error here')
 
   var err = {}
 
@@ -145,15 +151,22 @@ const handleError = function(error, test) {
     err['config'] = config
     err['response'] = resp
   }
+  console.error('received error here 1')
   if (!err.config) {
     err = error
   }
 
+  // if (config && config.url.endsWith('/login/logout')) {
   if (config && config.url.endsWith('/login/logout')) {
     if (resp.status === 401 || resp.status === 404) {
       return Promise.resolve()
     }
   } else {
+    if (resp && resp.status === 401) {
+      // TODO: The plugin might want to only receive the Reject error instead and handle this on his side
+      store.dispatch('LogOut')
+      router.push({ path: '/', replace: true, query: { noGoBack: false }})
+    }
     // API Is Down
     if (!resp) {
       router.push({ path: '/error/no_api_access', replace: true, query: { noGoBack: false }})
@@ -192,5 +205,5 @@ const handler = function(data, cache) {
     return service(data)
   }
 }
-
+window.$request = handler
 export default handler

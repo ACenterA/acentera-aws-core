@@ -1,6 +1,7 @@
 import store from '@/store'
 import { getSiteSettings } from '@/api/app.js'
 import { getSettingsToken, setSettingsToken } from '@/utils/settings.js'
+import { getSiteConfiguration } from '@/api/app'
 
 const settings = {
   state: {
@@ -115,11 +116,35 @@ const settings = {
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
       commit('SET_STACK_URL', data.stackUrl)
-      commit('SET_PLUGINS', data.plugins)
+      // commit('SET_PLUGINS', data.plugins)
       commit('SET_MFA', data.mfaEnabled)
       commit('SET_COGNITO', data.cognito || data.Cognito) // somehow its uppercase?
 
       setSettingsToken(data)
+    },
+    GetSiteConfiguration({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        getSiteConfiguration(state.token).then(response => {
+          console.error('received state config?')
+          // This returns the list of plugins
+          if (response && response.data) {
+            console.error('plugins of')
+            console.error(response.data)
+            console.error(store)
+            var Plugins = {}
+            for (var k in response.data.plugins) {
+              var tmpPlugin = response.data.plugins[k]
+              Plugins[tmpPlugin.title] = tmpPlugin
+            }
+            commit('SET_PLUGINS', Plugins)
+          }
+          console.error(response)
+          resolve(true)
+        }).catch((ex) => {
+          console.error(ex)
+          resolve(ex)
+        })
+      })
     },
     GetSiteSettings({ commit, state }) {
       return new Promise((resolve, reject) => {

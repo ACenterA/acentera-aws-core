@@ -10,7 +10,7 @@ import $ from 'jquery'
  */
 function hasPermission(roles, route) {
   if (route.meta && route.meta.roles) {
-    return roles.some(role => route.meta.roles.indexOf(role) >= 0)
+    return (roles || []).some(role => route.meta.roles.indexOf(role) >= 0)
   } else {
     return true
   }
@@ -52,8 +52,8 @@ const permission = {
       state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
     },
     ADD_PLUGINS: (state, routers) => {
-      state.addPlugins = routers
-      state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
+      state.addPlugins = state.addPlugins.concat(routers)
+      state.routers = constantRouterMap.concat(state.addPlugins).concat(state.addRouters)
     },
     SET_REPLACED_VIEW: (state, obj) => {
       console.error('REPLACE OF' + obj.path)
@@ -68,9 +68,70 @@ const permission = {
     }
   },
   actions: {
-    LoadPlugins({ commit }, data) {
-      const { roles } = data
+    ActivatePlugins({ commit, state }, data) {
+      const roles = data || window.app.$store.getters.roles
       return new Promise((resolve, reject) => {
+        // TODO: Check for failed plugins ??
+        const asyncTestRouterMap = []
+        var replaceUrls = {}
+
+        /* eslint-disable */
+        for (var input = null; input = window.asyncTestRouterMapTemp.shift(); input !== undefined ) {
+          /* eslint-enable */
+          // Make sure we only load the registered plugins paths
+          console.error('test input')
+          console.error(input.path)
+          if ((input.path || '').startsWith('/plugins/') || (input.path || '').startsWith('/')) {
+            console.error('OK IT DOES?')
+            if (!input['layout']) {
+              input['component'] = Layout
+            } else {
+              if (input['layout'] === 'default' || input['layout'] === 'Layout') {
+                input['component'] = Layout
+              }
+            }
+            console.error('test input')
+            console.error(input['replacePrecedence'])
+            console.error(input['replacePath'])
+            if (input['replacePrecedence'] && input['replacePath']) {
+              console.error('REPLCE')
+              console.error(input)
+              var replacePath = input['replacePath']
+              var replacePrecedence = input['replacePrecedence']
+              if (!replaceUrls[replacePath]) {
+                replaceUrls[replacePath] = {
+                  precedence: replacePrecedence,
+                  route: input
+                }
+              }
+              if (replaceUrls[replacePath].precedence > replacePrecedence) {
+                replaceUrls[replacePath] = {
+                  precedence: replacePrecedence,
+                  route: input
+                }
+              }
+              // commit('SET_REPLACED_VIEW', { path: '/dashboard', route: input })
+              // input['path'] = '/dashboard'
+            }
+            // console.error(window.app.$store)
+            asyncTestRouterMap.push(input)
+          }
+        }
+        for (var k in replaceUrls) {
+          commit('SET_REPLACED_VIEW', { path: k, route: replaceUrls[k].route })
+        }
+        const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
+        commit('ADD_PLUGINS', accessedRoutersTmp)
+        if (accessedRoutersTmp) {
+          window.app.$router.addRoutes(accessedRoutersTmp)
+        }
+        resolve(accessedRoutersTmp)
+      })
+    },
+    LoadPlugins({ commit }, data) {
+      var self = this
+      var hasPlugins = false
+      return new Promise(function(resolve, reject) {
         var lstPromises = []
         for (var v in store.getters.settings.plugins) {
           var basePlugin = '/plugins/'
@@ -111,6 +172,7 @@ const permission = {
                     if (tmp.is('script')) {
                       if (tmp.attr('src')) {
                         scriptAdd++
+                        hasPlugins = true
                         hasScripts = true
                         // TODO: Return from getSettings ?
                         const script = document.createElement('script')
@@ -166,35 +228,13 @@ const permission = {
         }
 
         Promise.all(lstPromises).then(function(rr) {
-          // TODO: Check for failed plugins ??
-          var length = window.asyncTestRouterMapTemp.length
-          const asyncTestRouterMap = []
-          for (var i = 0; i < length; i++) {
-            var input = {}
-            input = window.asyncTestRouterMapTemp.shift()
-            // Make sure we only load the registered plugins paths
-            if ((input.path || '').startsWith('/plugins/')) {
-              if (!input['layout']) {
-                input['component'] = Layout
-              } else {
-                if (input['layout'] === 'default' || input['layout'] === 'Layout') {
-                  input['component'] = Layout
-                }
-              }
-              if (input['replaceDashboard'] === true) {
-                console.error('REPLCE')
-                console.error(input)
-                // replacedViews
-                commit('SET_REPLACED_VIEW', { path: '/dashboard', route: input })
-                // input['path'] = '/dashboard'
-              }
-              // console.error(window.app.$store)
-              asyncTestRouterMap.push(input)
-            }
-          }
-          const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
-          commit('ADD_PLUGINS', accessedRoutersTmp)
-          resolve(accessedRoutersTmp)
+          console.error(this)
+          // console.error(self) // self is store
+          self.dispatch('ActivatePlugins', data)
+          // .then(function(r) {
+          resolve(hasPlugins)
+          // resolve(r)
+          // })
         })
       })
     },
@@ -212,6 +252,8 @@ const permission = {
         } else {
           accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
         }
+        console.error('ading routes of ..')
+        console.error(accessedRouters)
         commit('SET_ROUTERS', accessedRouters)
         resolve()
       })

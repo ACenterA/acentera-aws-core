@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie'
 import store from '@/store'
 import request from '@/utils/request'
+// import { Amplify, Auth } from 'aws-amplify'
 
 const TokenKey = 'Token'
 const TokenLastRefreshKey = 'TokenRefresh'
@@ -73,4 +74,59 @@ export function refreshToken(config) {
       return Promise.resolve(config)
     })
   }
+}
+
+const CognitoTokenKey = 'CognitoToken'
+const AWSTokenKey = 'CredentialsToken'
+
+export function setCognitoUserInfo(token) {
+  // console.error('set congito user toinfo')
+  // console.error(token)
+  // console.error(JSON.stringify(token))
+  return Cookies.set(CognitoTokenKey, JSON.stringify(token))
+}
+
+export function getCognitoUser() {
+  var val = Cookies.get(CognitoTokenKey)
+  try {
+    console.error('val is..')
+    console.error(val)
+    if (val === '{}') {
+      return null
+    }
+    val = JSON.parse(val)
+    console.error(val)
+    return val
+  } catch (err) {
+    return null
+  }
+}
+
+export function setCredentials(token) {
+  return Cookies.set(AWSTokenKey, JSON.stringify(token))
+}
+
+export function getCredentials(cognitoUser) {
+  return new Promise((resolve, reject) => {
+    window.Amplify.currentUserCredentials().then(function(ff) {
+      resolve(ff)
+    }).catch((ex) => {
+      console.error(ex.stack)
+      reject(ex)
+    })
+  })
+  /*
+  if (store && store.getters && store.getters.cachedCredentials) {
+    return store.getters.adminToken
+  }
+  */
+  /*
+  var val = Cookies.get(AWSTokenKey)
+  try {
+    val = JSON.parse(val)
+    return val
+  } catch (err) {
+    return null
+  }
+  */
 }

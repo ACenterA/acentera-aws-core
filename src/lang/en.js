@@ -75,7 +75,8 @@ export default {
     switchSuccess: 'Switch Language Success'
   },
   error: {
-    ServerTimeout: 'Could not contact server'
+    ServerTimeout: 'Could not contact server',
+    notAuthorized: 'You are not authorized'
   },
   login: {
     name: 'Your Fullname',

@@ -6,6 +6,7 @@ const getters = {
   visitedViews: state => state.tagsView.visitedViews,
   cachedViews: state => state.tagsView.cachedViews,
   token: state => state.user.token,
+  credentials: state => state.user.credentials,
   lastTokenRefresh: state => state.user.lastTokenRefresh,
   avatar: state => state.user.avatar,
   name: state => state.user.name,
@@ -18,6 +19,7 @@ const getters = {
   addRouters: state => state.permission.addRouters,
   errorLogs: state => state.errorLog.logs,
   settings: state => state.settings,
+  version: state => state.settings.version || '0.00',
   isCognitoUser: state => {
     try {
       if (state.settings) {

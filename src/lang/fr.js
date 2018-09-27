@@ -75,7 +75,8 @@ export default {
     switchSuccess: 'Changement de langue complété avec succès'
   },
   error: {
-    ServerTimeout: 'Erreur de connection au serveur'
+    ServerTimeout: 'Erreur de connection au serveur',
+    notAuthorized: 'Vous n\'êtes pas autorisé'
   },
   login: {
     name: 'Votre nom ( .Prenom Nom )',
