@@ -127,12 +127,29 @@ router.beforeEach((to, from, next) => {
                                 console.error('hasPlugins 2 ' + hasPlugins)
                                 if (hasPlugins) {
                                   // do not call next the plugin will do it
+                                  // var tmpTo = to
+                                  var tmpFrom = from
+                                  setTimeout(function() {
+                                    // in case of error
+                                    // could not load plugins
+                                    console.error('[ERROR] The plugin did successfully load. Have some of them failed?')
+                                    if (window.app.$route.path === tmpFrom.path) {
+                                      next({ path: '/500', replace: true, query: { noGoBack: true }})
+                                    }
+                                    // next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                                  }, 10000)
                                 } else {
                                   // store.commit('NPROGRESS_END')
                                   next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
                                   // store.commit('NPROGRESS_END_DELAY')
                                 }
                                 store.commit('NPROGRESS_END_DELAY')
+                              }).catch((err) => {
+                                console.error('GOT ERROR HERE ZA?')
+                                console.error(err)
+                                next({ ...to, replace: true }) // hack ... addRoutes, set the replace: true so the navigation will not leave a history record
+                                store.commit('NPROGRESS_END')
+                                // store.commit('NPROGRESS_END_DELAY')
                               })
                             }).catch((err) => {
                               console.error('GOT ERROR HERE A?')

@@ -263,7 +263,7 @@ const permission = {
 
         Promise.all(lstPromises).then(function(rr) {
           if (objToAdd.length <= 0) {
-            resolve(true)
+            resolve(0) // no plugins
           } else {
             nFct(last, resolve, reject)
           }
