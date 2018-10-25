@@ -1,6 +1,7 @@
 <template>
-  <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="sidebar-container" style="z-index:10">
-    <hamburger :toggle-click="toggleMainSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
+  <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="sidebar-container">
+    <hamburger v-if="device == 'mobile' && isSidebarCollapse" :toggle-click="toggleSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
+    <hamburger v-if="device == 'desktop'" :toggle-click="toggleMainSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
     <el-menu
       :hidden="isHidden"
       :show-timeout="200"
@@ -30,6 +31,7 @@ export default {
     ...mapGetters([
       'permission_routers',
       'sidebar',
+      'device',
       'mainsidebar'
     ]),
     isCollapse() {
@@ -38,6 +40,9 @@ export default {
     isHidden() {
       return !this.mainsidebar.visible
     },
+    isSidebarCollapse() {
+      return !this.sidebar.opened
+    },
     isToolHidden() {
       return !this.sidebar.visible
     }
@@ -45,6 +50,9 @@ export default {
   methods: {
     toggleMainSideBar() {
       this.$store.dispatch('toggleMainSideBar')
+    },
+    toggleSideBar() {
+      this.$store.dispatch('toggleSideBar')
     }
   }
 }

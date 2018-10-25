@@ -43,6 +43,7 @@ const app = {
     },
     TOGGLE_SIDEBAR: state => {
       console.error('toggle a')
+      console.error(state.innerSidebar)
       if (state.innerSidebar === true) {
         if (state.sidebar.opened) {
           Cookies.set('sidebarStatus', 1)
@@ -65,15 +66,15 @@ const app = {
     },
     CLOSE_SIDEBAR: (state, withoutAnimation) => {
       console.error('close a')
-      if (state.innerSidebar === true) {
-        Cookies.set('sidebarStatus', 1)
-        state.sidebar.opened = false
-        state.sidebar.withoutAnimation = withoutAnimation
-      } else {
+      // if (state.innerSidebar === true) {
+      Cookies.set('sidebarStatus', 1)
+      state.sidebar.opened = false
+      state.sidebar.withoutAnimation = withoutAnimation
+      /* } else {
         Cookies.set('mainsidebarStatus', 1)
         state.mainsidebar.opened = false
         state.mainsidebar.withoutAnimation = withoutAnimation
-      }
+      }*/
     },
     SET_LOADING: (state, val) => {
       console.error('SET LOADING CALLED HERE (LOADING NOW) ->', val)
@@ -130,6 +131,9 @@ const app = {
       console.error('toggle i')
       Cookies.set('mainsidebarStatus', 1)
       state.mainsidebar.opened = false
+      if (state.innerSidebar) {
+        state.mainsidebar.visible = false
+      }
       state.mainsidebar.withoutAnimation = withoutAnimation
     },
     SHOW_MAIN_SIDEBAR: (state, withoutAnimation) => {
@@ -145,10 +149,12 @@ const app = {
     SHOW_INNER_SIDEBAR: (state, withoutAnimation) => {
       state.sidebar.opened = true
       state.sidebar.visible = true
+      state.innerSidebar = true
       state.sidebar.withoutAnimation = withoutAnimation
     },
     HIDE_INNER_SIDEBAR: (state, withoutAnimation) => {
-      console.error('toggle wwf')
+      // console.error('toggle wwf')
+      state.innerSidebar = false
       state.sidebar.visible = false
       state.sidebar.withoutAnimation = withoutAnimation
     },
@@ -321,6 +327,8 @@ const app = {
           console.error('test class 3')
           hasClass = input.to.meta.class
         }
+      } else {
+        state.activePlugin = ''
       }
       console.error('test class 4', hasClass)
       commit('SET_CLASS', hasClass)
@@ -330,6 +338,9 @@ const app = {
     },
     toggleMainSideBar({ commit }) {
       commit('TOGGLE_MAIN_SIDEBAR')
+    },
+    showMainSideBar({ commit }) {
+      commit('SHOW_MAIN_SIDEBAR')
     },
     hideInnerSidebarForce({ commit }) {
       // No Inner Project Sidebar ...
@@ -342,6 +353,12 @@ const app = {
     closeSideBar({ commit }, { withoutAnimation }) {
       commit('CLOSE_SIDEBAR', withoutAnimation)
     },
+    hideMainSideBar({ commit }, { withoutAnimation }) {
+      commit('HIDE_MAIN_SIDEBAR', withoutAnimation)
+    },
+    closeMainSideBar({ commit }, { withoutAnimation }) {
+      commit('CLOSE_MAIN_SIDEBAR', withoutAnimation)
+    },
     toggleDevice({ commit }, device) {
       commit('TOGGLE_DEVICE', device)
     },
@@ -350,6 +367,9 @@ const app = {
     },
     setSize({ commit }, size) {
       commit('SET_SIZE', size)
+    },
+    showInnerSidebarForce({ commit }, sidebar) {
+      commit('SHOW_SIDEBAR', sidebar)
     },
     showSidebar({ commit }, sidebar) {
       commit('SHOW_SIDEBAR', sidebar)

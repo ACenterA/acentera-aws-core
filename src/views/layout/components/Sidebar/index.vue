@@ -1,7 +1,8 @@
 <template>
-  <div style="z-index:1">
-    <hamburger :toggle-click="toggleMainSideBar" :is-hidden="isMainActive" :is-active="!isMainActive" class="hamburger-container" style="padding:15px"/>
-    <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper custom-wrapper">
+  <div style="z-index:900;background-color:white">
+    <hamburger :toggle-click="toggleSideBar" :is-hidden="isMainActive || isHidden" :is-active="!isMainActive" class="hamburger-container"/>
+    <br>
+    <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="custom-wrapper">
       <el-menu
         :hidden="isHidden"
         :show-timeout="200"
@@ -38,7 +39,8 @@ export default {
       'plugin_permission_routers',
       'sidebar',
       'activePlugin',
-      'mainsidebar'
+      'mainsidebar',
+      'device'
     ]),
     isMainActive() {
       return this.mainsidebar.opened && this.mainsidebar.visible
@@ -55,10 +57,22 @@ export default {
       console.error('test a333a')
       if (this.plugin_permission_routers[this.activePlugin]) {
         console.error('test a333bbb')
+        this.$store.dispatch('showInnerSidebarForce')
         return this.plugin_permission_routers[this.activePlugin]
       } else {
         console.error('test a333ccc')
         this.$store.dispatch('hideInnerSidebarForce')
+      }
+    },
+    toggleSideBar() {
+      if (this.device === 'mobile') {
+        this.toggleMainSideBar()
+      } else {
+        if (this.sidebar.opened) {
+          this.toggleMainSideBar()
+        } else {
+          this.$store.dispatch('toggleSideBar')
+        }
       }
     },
     toggleMainSideBar() {

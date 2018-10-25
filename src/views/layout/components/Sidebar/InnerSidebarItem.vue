@@ -124,21 +124,3 @@ export default {
 }
 // # .custom-nest-menu .el-submenu-item:hover > #app .sidebar-container .nest-menu .elsubmenu > .el-submenu__title:hover, #app .sidebar-container .elsubmenu .el-submenu-item:hover {
 </script>
-
-<style>
-.custom-menu-wrapper .el-menu-item:hover, .custom-menu-wrapper .el-submenu .el-menu-item:hover, .custom-menu-wrapper .el-submenu .el-menu-item:hover, .custom-menu-wrapper .el-submenu.is-active .el-submenu__title:hover {
-    background-color: white!important;
-    font-weight: bold;
-}
-.custom-menu-wrapper .el-submenu__title:hover {
-  background-color: white!important;
-  font-weight: bold;
-}
-.custom-nest-menu .el-submenu__title:hover {
-  background-color: white!important;
-  font-weight: bold;
-}
-.custom-nest-menu .el-menu-item > #app .sidebar-container .nest-menu .el-submenu > .el-submenu__title, #app .sidebar-container .el-submenu .el-menu-item {
-  background-color: white!important;
-}
-</style>

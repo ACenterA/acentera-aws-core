@@ -27,6 +27,9 @@ export default {
   },
   mixins: [ResizeMixin],
   computed: {
+    isInnerSide() {
+      return this.$store.state.app.innerSidebar
+    },
     sidebar() {
       return this.$store.state.app.sidebar
     },
@@ -38,12 +41,12 @@ export default {
     },
     classObj() {
       return {
-        hiddenSidebar: !this.mainsidebar.visible && !this.sidebar.visible,
+        hiddenSidebar: !this.mainsidebar.visible,
         hideSidebar: !this.mainsidebar.opened && !this.sidebar.visible,
         openSidebar: this.mainsidebar.opened || this.sidebar.opened,
-        hiddenInnerSidebar: !this.sidebar.visible,
-        hideInnerSidebar: !this.sidebar.opened,
-        openInnerSidebar: this.sidebar.opened,
+        hiddenInnerSidebar: this.$store.state.app.innerSidebar && !this.sidebar.visible,
+        hideInnerSidebar: this.$store.state.app.innerSidebar === true && !this.sidebar.opened && !this.mainsidebar.visible,
+        openInnerSidebar: this.$store.state.app.innerSidebar === true && this.sidebar.opened,
         withoutAnimation: this.mainsidebar.withoutAnimation,
         mobile: this.device === 'mobile'
       }
@@ -52,14 +55,20 @@ export default {
       return {
         hiddenSidebar: !this.mainsidebar.visible && !this.sidebar.visible,
         hideSidebar: (!this.mainsidebar.opened && this.mainsidebar.visible) || (!this.sidebar.opened && this.sidebar.visible),
-        hiddenInnerSidebar: !this.sidebar.visible,
-        hideInnerSidebar: !this.sidebar.opened
+        hiddenInnerSidebar: this.$store.state.app.innerSidebar === true && !this.sidebar.visible,
+        hideInnerSidebar: this.$store.state.app.innerSidebar === true && !this.sidebar.opened,
+        argaa: this.$store.state.app.innerSideBar === true
       }
     }
   },
   methods: {
     handleClickOutside() {
+      // if (this.mainsidebar.opened) {
+      this.$store.dispatch('closeMainSideBar', { withoutAnimation: false })
       this.$store.dispatch('closeSideBar', { withoutAnimation: false })
+      // } else {
+      //  this.$store.dispatch('closeSideBar', { withoutAnimation: false })
+      // }
     }
   }
 }
@@ -84,6 +93,6 @@ export default {
     top: 0;
     height: 100%;
     position: absolute;
-    z-index: 999;
+    z-index: 800;
   }
 </style>

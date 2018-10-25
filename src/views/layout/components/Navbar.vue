@@ -1,6 +1,6 @@
 <template>
   <div class="navbar">
-    <hamburger :toggle-click="toggleSideBar" :is-hidden="sidebar.visible || !mainsidebar.visible" :is-active="mainsidebar.opened" class="hamburger-container"/>
+    <hamburger :toggle-click="toggleSideBar" :is-hidden="!mainsidebar.visible" class="main hamburger-container"/>
     <!-- breadcrumb class="breadcrumb-container" -->
 
     <div class="right-menu">
@@ -77,11 +77,22 @@ export default {
       'name',
       'avatar',
       'device'
-    ])
+    ]),
+    innerSideBar() {
+      return this.$store.state.app.innerSidebar === true
+    }
   },
   methods: {
     toggleSideBar() {
-      this.$store.dispatch('toggleSideBar')
+      console.error(this.$store.state)
+      if (this.$store.state.app.innerSidebar) {
+        this.$store.dispatch('toggleMainSideBar')
+        this.$store.dispatch('toggleSideBar')
+        this.$store.dispatch('hideMainSideBar', false)
+      } else {
+        this.$store.dispatch('showMainSideBar')
+        this.$store.dispatch('toggleMainSideBar')
+      }
     },
     toggleMainSideBar() {
       this.$store.dispatch('toggleMainSideBar')
