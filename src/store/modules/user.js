@@ -505,7 +505,7 @@ const user = {
               resolve()
             }
           }).catch((e) => {
-            this.$store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
+            store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
               // All Good non cognito User
               window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
               resolve()
@@ -519,7 +519,7 @@ const user = {
         })
       } else {
         return new Promise((resolve, reject) => {
-          this.$store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
+          store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
             // All Good
             window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
             resolve()

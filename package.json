@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "build:prod": "cross-env NODE_ENV=production env_config=prod node build/build.js",
-    "embed": "go-bindata -o ../gofaas/static/main.go -pkg static dist/...",
+    "embed": "go-bindata-assetfs -o ../gofaas/static/main.go -pkg static dist/...",
+    "binary": "go-bindata-assetfs -o ../gofaas/static/main.go -pkg static dist/...",
     "build:sit": "cross-env NODE_ENV=production env_config=sit node build/build.js",
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
@@ -54,6 +55,7 @@
     "jszip": "3.1.5",
     "localforage": "^1.7.2",
     "mockjs": "1.0.1-beta3",
+    "moment": "^2.22.2",
     "normalize.css": "7.0.0",
     "npm": "^6.4.1",
     "nprogress": "0.2.0",

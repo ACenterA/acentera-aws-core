@@ -1,5 +1,5 @@
 <template>
-  <section class="app-main">
+  <section :class="customclass" class="app-main">
     <transition name="fade-transform" mode="out-in">
       <keep-alive :include="cachedViews">
         <router-view :key="key"/>
@@ -9,9 +9,13 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 export default {
   name: 'AppMain',
   computed: {
+    ...mapGetters([
+      'customclass'
+    ]),
     cachedViews() {
       return this.$store.state.tagsView.cachedViews
     },
@@ -29,5 +33,11 @@ export default {
   width: 100%;
   position: relative;
   overflow: hidden;
+}
+</style>
+
+<style rel="stylesheet/scss" lang="scss">
+.base-grey {
+  background-color: rgb(240, 242, 245);
 }
 </style>

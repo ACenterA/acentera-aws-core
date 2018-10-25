@@ -136,7 +136,7 @@
         </div>
         <div v-if="!getCognitoUser.signInUserSession">
           <!-- !getCognitoUser.signInUserSession -->
-          <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left">
+          <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left" @submit.native.prevent="submit">
             <div v-if="!getCognitoUser.signInUserSession && (getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA')">
               <div class="title-container">
                 <h3 v-if="getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'" class="title">{{ $t('login.mfaTitleToken') }}</h3>

@@ -1,7 +1,6 @@
 <template>
   <div class="navbar">
-    <hamburger :toggle-click="toggleSideBar" :is-hidden="!sidebar.visible" :is-active="sidebar.opened" class="hamburger-container"/>
-
+    <hamburger :toggle-click="toggleSideBar" :is-hidden="sidebar.visible || !mainsidebar.visible" :is-active="mainsidebar.opened" class="hamburger-container"/>
     <!-- breadcrumb class="breadcrumb-container" -->
 
     <div class="right-menu">
@@ -35,8 +34,9 @@
             <el-dropdown-item>
               {{ $t('navbar.dashboard') }}
             </el-dropdown-item>
+            <!-- TODO: We will need to add a way fo plugins to register few items in here .. -->
           </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">
+          <a target="_blank" href="https://github.com/ACenterA/vue-element-admin/">
             <el-dropdown-item>
               {{ $t('navbar.github') }}
             </el-dropdown-item>
@@ -73,6 +73,7 @@ export default {
   computed: {
     ...mapGetters([
       'sidebar',
+      'mainsidebar',
       'name',
       'avatar',
       'device'
@@ -81,6 +82,9 @@ export default {
   methods: {
     toggleSideBar() {
       this.$store.dispatch('toggleSideBar')
+    },
+    toggleMainSideBar() {
+      this.$store.dispatch('toggleMainSideBar')
     },
     logout() {
       this.$store.dispatch('LogOut').then(() => {

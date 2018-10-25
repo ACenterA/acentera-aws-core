@@ -72,29 +72,31 @@ const settings = {
         }
 
         const config = state.cognito
-        window.Amplify.configure({
-          Auth: {
-            mandatorySignIn: true,
-            region: config.cognito.REGION,
-            userPoolId: config.cognito.USER_POOL_ID,
-            identityPoolId: config.cognito.IDENTITY_POOL_ID,
-            userPoolWebClientId: config.cognito.APP_CLIENT_ID
-          },
-          Storage: {
-            region: config.s3.REGION,
-            bucket: config.s3.BUCKET,
-            identityPoolId: config.cognito.IDENTITY_POOL_ID
-          },
-          API: {
-            endpoints: [
-              {
-                name: 'admin',
-                endpoint: config.apiGateway.URL,
-                region: config.apiGateway.REGION
-              }
-            ]
-          }
-        })
+        if (config.cognito) {
+          window.Amplify.configure({
+            Auth: {
+              mandatorySignIn: true,
+              region: config.cognito.REGION,
+              userPoolId: config.cognito.USER_POOL_ID,
+              identityPoolId: config.cognito.IDENTITY_POOL_ID,
+              userPoolWebClientId: config.cognito.APP_CLIENT_ID
+            },
+            Storage: {
+              region: config.s3.REGION,
+              bucket: config.s3.BUCKET,
+              identityPoolId: config.cognito.IDENTITY_POOL_ID
+            },
+            API: {
+              endpoints: [
+                {
+                  name: 'admin',
+                  endpoint: config.apiGateway.URL,
+                  region: config.apiGateway.REGION
+                }
+              ]
+            }
+          })
+        }
       } catch (ex) {
         if (ex) {
           console.error(ex)
@@ -110,8 +112,10 @@ const settings = {
     },
     UpdateSiteSettings({ commit, state }, input) {
       var data = input.data || input
+      console.error('resolve here UPDATE SETTING HERE 01')
       commit('SET_LOADED', true)
       commit('SET_RECAPCHA_KEY', data.recaptchaKey)
+      console.error('resolve here UPDATE SETTING HERE 02')
       commit('SET_ALLOW_REGISTER', data.allowRegister)
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
@@ -123,6 +127,7 @@ const settings = {
       setSettingsToken(data)
     },
     GetSiteConfiguration({ commit, state }) {
+      console.error('resolve here a GetSiteConfig 01')
       return new Promise((resolve, reject) => {
         getSiteConfiguration(state.token).then(response => {
           console.error('received state config?')
@@ -147,36 +152,51 @@ const settings = {
       })
     },
     GetSiteSettings({ commit, state }) {
+      console.error('resolve here a GetSiteSettings')
       return new Promise((resolve, reject) => {
-        if (state.isLoaded) {
+        if (state.isLoaded || (window.preventLoop === true)) { // preventLoop not really works when using Uglify and chunks ?
           resolve('loaded')
         } else {
+          window.preventLoop = true
+          commit('SET_LOADED', true) // FORCE LOADED
           var data = getSettingsToken()
           var hasResolved = false
           if (data) {
             store.dispatch('UpdateSiteSettings', { data }).then(() => {
               hasResolved = true
-              console.error('resolve here a')
+              console.error('resolve here a 01 ')
               resolve('resolve')
             })
           }
+          console.error('resolve here a 02')
           // We will update based on rest api if needed
           getSiteSettings().then(response => {
+            console.error('resolve here a 03')
             console.error('get info')
             if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
+              console.error('resolve here a 04')
               // Save app Settings ...
               const data = response.data
+              console.error('resolve here a 05')
               store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
+                console.error('resolve here a 06')
                 if (!hasResolved) {
+                  console.error('resolve here a 07')
                   hasResolved = true
+                  console.error('resolve here a 08')
                   resolve('resolve fetch')
                 }
+                console.error('resolve here a 09')
               })
             }
+            console.error('resolve here a 10')
             if (!hasResolved) {
+              console.error('resolve here a 12')
               resolve('forced_no_internet_or_cookies')
             }
           }).catch(err => {
+            console.error('resolve here a 13')
+            console.error(err)
             if (err) {
               console.error('could not refresh cache')
             }

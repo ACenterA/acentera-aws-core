@@ -91,12 +91,23 @@
       }
     }
   }
+
+  // ACenterA Added for inner menu hover fix
+  .sidebar-container .custom-nest-menu .el-submenu>.el-submenu__title,
+  .sidebar-container .custom-nest-menu .el-submenu .el-menu-item {
+    min-width: 180px !important;
+    background-color: $innerSubMenuBg !important;
+    &:hover {
+      background-color: $innerMenuHover !important;
+    }
+  }
+
   .sidebar-container .nest-menu .el-submenu>.el-submenu__title,
   .sidebar-container .el-submenu .el-menu-item {
     min-width: 180px !important;
     background-color: $subMenuBg !important;
     &:hover {
-      background-color: $menuHover !important;
+      background-color: blue !important;
     }
   }
   .el-menu--collapse .el-menu .el-submenu {

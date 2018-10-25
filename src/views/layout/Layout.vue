@@ -1,7 +1,9 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
+    <div v-if="device==='mobile'&&(mainsidebar.opened||sidebar.opened)" class="drawer-bg" @click="handleClickOutside"/>
+    <main-sidebar class="sidebar-container"/>
     <sidebar class="sidebar-container"/>
+
     <div :class="mainContainerClassObj" class="main-container">
       <navbar/>
       <!--<tags-view/>-->
@@ -11,7 +13,7 @@
 </template>
 
 <script>
-import { Navbar, Sidebar, AppMain, TagsView } from './components'
+import { Navbar, Sidebar, MainSidebar, AppMain, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 
 export default {
@@ -19,6 +21,7 @@ export default {
   components: {
     Navbar,
     Sidebar,
+    MainSidebar,
     AppMain,
     TagsView
   },
@@ -27,21 +30,30 @@ export default {
     sidebar() {
       return this.$store.state.app.sidebar
     },
+    mainsidebar() {
+      return this.$store.state.app.mainsidebar
+    },
     device() {
       return this.$store.state.app.device
     },
     classObj() {
       return {
-        hiddenSidebar: !this.sidebar.visible,
-        hideSidebar: !this.sidebar.opened,
-        openSidebar: this.sidebar.opened,
-        withoutAnimation: this.sidebar.withoutAnimation,
+        hiddenSidebar: !this.mainsidebar.visible && !this.sidebar.visible,
+        hideSidebar: !this.mainsidebar.opened && !this.sidebar.visible,
+        openSidebar: this.mainsidebar.opened || this.sidebar.opened,
+        hiddenInnerSidebar: !this.sidebar.visible,
+        hideInnerSidebar: !this.sidebar.opened,
+        openInnerSidebar: this.sidebar.opened,
+        withoutAnimation: this.mainsidebar.withoutAnimation,
         mobile: this.device === 'mobile'
       }
     },
     mainContainerClassObj() {
       return {
-        hiddenSidebar: !this.sidebar.visible
+        hiddenSidebar: !this.mainsidebar.visible && !this.sidebar.visible,
+        hideSidebar: (!this.mainsidebar.opened && this.mainsidebar.visible) || (!this.sidebar.opened && this.sidebar.visible),
+        hiddenInnerSidebar: !this.sidebar.visible,
+        hideInnerSidebar: !this.sidebar.opened
       }
     }
   },

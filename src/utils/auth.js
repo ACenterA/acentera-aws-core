@@ -61,19 +61,45 @@ export function performTokenRefresh() {
   })
 }
 
-export function refreshToken(config) {
-  if (config.url === '/user/token/refresh') {
-    return Promise.resolve(config)
-  } else {
-    return performTokenRefresh().then(res => { // 拉取user_info
-      const data = res.data
-      if (data && data.token) {
-        store.commit('SET_TOKEN', data.token)
-        setToken(data.token)
-      }
-      return Promise.resolve(config)
-    })
-  }
+export function refreshToken(data) {
+  const config = data.config
+  return new Promise((resolve, reject) => {
+    if (config.url === '/user/token/refresh') {
+      console.error('PERFORMED REFRESH TOKEN... current url ??? simply resolve it..')
+      console.error(config)
+      return resolve(config) // Promise.resolve(config)
+    } else {
+      performTokenRefresh().then(res => { // 拉取user_info
+        console.error('PERFORMED REFRESH TOKEN...')
+        console.error('res is...')
+        console.error(res)
+        try {
+          const data = res.data
+          if (data && data.token) {
+            console.error('data token existed...')
+            console.error('set token of...' + data.token)
+            store.commit('SET_TOKEN', data.token)
+            setToken(data.token)
+            console.error('SET CONFIG HEADER.... override token to ' + data.token)
+            console.error('SET CONFIG HEADER.... override token TEST of  ' + getToken())
+            console.error('OK CONFIG IS')
+            console.error(config)
+            console.error('DELETIN GCONFIG TOKEN HERE X-Token')
+            delete config.headers['X-Token']
+            config.headers['X-Token'] = data.token // Reset Token to current received token
+          }
+          console.error('resolving ocnfig here')
+          console.error(config)
+          return resolve(config) // Promise.resolve(config)
+        } catch (exx) {
+          console.error(exx.stack)
+          console.error('reject of config here here ...')
+          console.error(config)
+          return reject(config) // Promise.reject(config)
+        }
+      })
+    }
+  })
 }
 
 const CognitoTokenKey = 'CognitoToken'
