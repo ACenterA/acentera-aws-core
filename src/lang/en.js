@@ -83,6 +83,7 @@ export default {
     mfaRegisterRequired: 'Register MFA Device',
     mfaRegisterSubmit: 'Register device',
     mfaTitleToken: 'Multi-Factor Authentication',
+    needMfa: 'This site require a Software Token (Multi-Factor Authentication)',
     mfa: '(Optional) MFA Code',
     InvalidCode: 'Invalid Code. Make sure to re-scan the QR Code and try again.',
     phone_number: 'Your phone number (+XXXYYYXXXX)',

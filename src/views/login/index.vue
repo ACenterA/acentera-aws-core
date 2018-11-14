@@ -119,9 +119,7 @@
             <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleAssignDeviceConfirm">{{ $t('login.mfaRegisterSubmit') }}</el-button>
             <el-button :loading="loading" type="secondary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handlePasswordChangeCancel">{{ $t('login.cancelUpdate') }}</el-button>
           </el-form>
-
         </div>
-
         <div v-if="!needMFARegistration && loading && (getCognitoUser.signInUserSession || !(getCognitoUser.challengeName == 'NEW_PASSWORD_REQUIRED' || getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'))">
           <!-- Loading ... -->
           <el-form class="login-form" label-position="left">
@@ -137,7 +135,7 @@
         <div v-if="!getCognitoUser.signInUserSession">
           <!-- !getCognitoUser.signInUserSession -->
           <el-form v-if="!getCognitoUser.code" ref="passwordChangeForm" :model="passwordChangeForm" :rules="passwordRules" class="login-form" auto-complete="on" label-position="left" @submit.native.prevent="submit">
-            <div v-if="!getCognitoUser.signInUserSession && (getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA')">
+            <div v-if="!needMFARegistration && !getCognitoUser.signInUserSession && (getCognitoUser.challengeName == 'SMS_MFA' || getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA')">
               <div class="title-container">
                 <h3 v-if="getCognitoUser.challengeName == 'SOFTWARE_TOKEN_MFA'" class="title">{{ $t('login.mfaTitleToken') }}</h3>
                 <h3 v-if="getCognitoUser.challengeName == 'SMS_MFA'" class="title">{{ $t('login.mfaTitleSms') }}</h3>
@@ -523,6 +521,7 @@ export default {
           self.loading = false
         }, 2000)
       }).catch(() => {
+        self.codeConfirm.code = ''
         this.loading = false
       })
     },
@@ -532,14 +531,21 @@ export default {
         code: this.codeConfirm.code,
         mfaType: this.getCognitoUser.challengeName
       }
-      this.$store.dispatch('UserLoginConfirmByCode', mfa).then(() => {
+      var self = this
+      this.$store.dispatch('UserLoginConfirmByCode', mfa).then((needMFAResp) => {
         this.resetForm()
-        this.$router.push({ path: this.redirect || '/' })
-        var self = this
-        setTimeout(function() {
+        if (!needMFAResp) {
+          self.codeConfirm.code = ''
           self.loading = false
-        }, 2000)
-      }).catch(() => {
+        } else {
+          this.$router.push({ path: this.redirect || '/' })
+          setTimeout(function() {
+            self.loading = false
+          }, 2000)
+        }
+      }).catch((erz) => {
+        console.error(erz)
+        // alert('ok loggedin using.. ' + mfa.mfaType)
         this.loading = false
       })
     },

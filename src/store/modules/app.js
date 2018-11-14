@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie'
-import store from '@/store'
+// import store from '@/store'
 
 const app = {
   state: {
@@ -80,11 +80,11 @@ const app = {
       console.error('SET LOADING CALLED HERE (LOADING NOW) ->', val)
       state.loading = val
       console.error('NPROGRESS 1 - ADD ' + state.nprogress)
-      state.nprogress++
-      if (state.nprogress === 1) {
-        // clearInterval(state.lastClearInterval)
-        store.commit('NPROGRESS_END')
-      }
+      // NOV: state.nprogress++
+      // if (state.nprogress === 1) {
+      // clearInterval(state.lastClearInterval)
+      //  store.commit('NPROGRESS_END')
+      // }
     },
     SHOW_SIDEBAR: (state, withoutAnimation) => {
       console.error('toggle c')
@@ -171,7 +171,7 @@ const app = {
     },
     NPROGRESS_START_LOADING(state) {
       //  done in set route instead... state.nprogress++
-      console.error('NPROGRESS ADD AGAIN (LOADING..)', state.nprogress + new Date().getTime())
+      console.error('NPROGRESS ADD AGAIN (LOADING startloading..)', state.nprogress + new Date().getTime())
       state.nprogress++
       clearInterval(state.lastClearInterval)
       try {
@@ -182,9 +182,8 @@ const app = {
     },
     NPROGRESS_START(state) {
       //  done in set route instead... state.nprogress++
-      console.error('calling start (LOADING AND )?' + state.nprogress + new Date().getTime())
-      // if (!state.loading) {
-      state.loading = true
+      console.error('calling start (LOADING start )?' + state.nprogress + new Date().getTime())
+      // done in the dispatch function ... state.loading = true
       if (state.nprogress < 0) {
         console.error('calling start? set loading... and nprogress to 1 from ' + state.nprogress)
         state.nprogress = 1
@@ -208,12 +207,12 @@ const app = {
         len = 800
       }
       setTimeout(function() {
-        console.error('ZZZ receive dend here (LOADING) -> ... dispattching state.nprogress is ' + state.nprogress + new Date().getTime())
+        console.error('ZZZ receive dend here (LOADING END+DELAY) -> ... dispattching state.nprogress is ' + state.nprogress + new Date().getTime())
         self.commit('NPROGRESS_END', state)
       }, len)
     },
     NPROGRESS_END(state) {
-      console.error('zzz3 receive dend here (LOADING) -> ... state.nprogress is ' + state.nprogress + new Date().getTime())
+      console.error('zzz3 receive dend here (LOADING END) -> ... state.nprogress is ' + state.nprogress + new Date().getTime())
       if (state.lastClearInterval) {
         clearInterval(state.lastClearInterval)
       }
@@ -221,6 +220,7 @@ const app = {
       // if (--state.nprogress <= 0) {
       //  state.nprogress++ // lets re add it since we will remove it in the setinterval ...
       --state.nprogress
+      const oldProgress = state.nprogress
       setTimeout(function() {
         if (state.nprogress <= 0) {
           console.error('elss than zero (LOADING)')
@@ -234,21 +234,23 @@ const app = {
           // --state.nprogress
           setTimeout(function() {
             console.error('bbb ' + state.nprogress)
-            // state.nprogress++
-            state.nbiteration++
-            if (state.nprogress <= 0) {
-              console.error('fff3 receive dend here (LOADING) -> false')
-              state.nbiteration = 0
-              state.loading = false
-              window.NProgress.done()
-              clearInterval(state.lastClearInterval)
-            } else {
-              if (state.nbiteration >= 1000) {
+            if (state.nprogress === oldProgress || state.nprogress < 0) {
+              // state.nprogress++
+              state.nbiteration++
+              if (state.nprogress <= 0) {
                 console.error('fff3 receive dend here (LOADING) -> false')
                 state.nbiteration = 0
                 state.loading = false
                 window.NProgress.done()
-                // clearInterval(state.lastClearInterval)
+                clearInterval(state.lastClearInterval)
+              } else {
+                if (state.nbiteration >= 1000) {
+                  console.error('fff3 receive dend here (LOADING) -> false')
+                  state.nbiteration = 0
+                  state.loading = false
+                  window.NProgress.done()
+                  // clearInterval(state.lastClearInterval)
+                }
               }
             }
           }, 300) // 300 milliseconds is a good value, 300 seems to low in local dev ??
@@ -256,11 +258,14 @@ const app = {
       }, 100)
     },
     NPROGRESS_END_NOW(state) {
-      console.error('2 - receive dend here')
+      console.error('2 - receive dend here (LOADING NPROGRESSE END NOW)')
+      /*
       if (state.lastClearInterval) {
         console.error('ddd')
         clearInterval(state.lastClearInterval)
-      }
+      }*
+
+      /*
       state.lastClearInterval = setInterval(function() {
         console.error('2- NPROGRESS LOWER HERE A', state.nprogress)
         if (--state.nprogress <= 0) {
@@ -271,13 +276,14 @@ const app = {
           clearInterval(state.lastClearInterval)
         }
       }, 30)
+      */
     },
     SET_ROUTE_INFO(state, input) {
       console.error('SET LOADING to true 2 - received (LOADING) --> true ')
-      state.loading = true
+      // state.loading = true
       state.lastLoading = new Date().getTime()
-      console.error('NPROGRESS ADD new route AGAIN ', state.nprogress)
-      state.nprogress++
+      console.error('(PROGRESS ADD HERE ?)NPROGRESS ADD new route AGAIN ', state.nprogress)
+      // NOV: state.nprogress++
       console.error('fff')
       clearInterval(state.lastClearInterval)
       console.error('route loading change info aaaa...')
@@ -288,6 +294,7 @@ const app = {
       return new Promise((resolve, reject) => {
         console.error(state)
         commit('NPROGRESS_START')
+        commit('SET_LOADING', true)
         /*
         if (state.nprogress <= 0) {
           setTimeout(function() {
@@ -298,7 +305,9 @@ const app = {
           resolve()
         }
         */
+        // setTimeout(function() {
         resolve()
+        // },60)
       })
     },
     NPROGRESS_END_DELAY({ state, commit }) {

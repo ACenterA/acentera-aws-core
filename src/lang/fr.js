@@ -82,6 +82,7 @@ export default {
     name: 'Votre nom ( .Prenom Nom )',
     mfa: '(Optional) MFA Code',
     InvalidCode: 'Code invalide, veuillez scanner le QR code et recommencer',
+    needMfa: 'Ce site requiert un authentication a 2 facteur de type software (2FA)',
     mfaRegisterRequired: 'Configuration MFA nécessaire',
     mfaRegisterSubmit: 'Configurer',
     mfaTitleToken: 'Authentication MFA',

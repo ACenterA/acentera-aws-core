@@ -32,13 +32,13 @@ const cache = setupCache({
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.BASE_API, // api 的 base_url
-  timeout: 10000 // request timeout
+  timeout: 55000 // request timeout
 })
 
 const cachedService = axios.create({
   adapter: cache.adapter,
   baseURL: process.env.BASE_API, // api 的 base_url
-  timeout: 10000 // request timeout
+  timeout: 55000 // request timeout
 })
 
 var avoidDoubleRefresh = false
@@ -57,27 +57,9 @@ const configHandler = function(config) {
     console.error(config.headers)
     if (config && !config.url.endsWith('/token/refresh')) {
       var currentTime = Math.round(new Date().getTime() / 1000)
-      var playload = JSON.parse(atob(getToken().split('.')[1]))
-      // var tokenExpirationTime = playload.exp
-      var tokenDuration = playload.exp - playload.iat
-      // Refresh token every X iterations 25% of expiration time
-      const refreshTime = tokenDuration * 25 / 100 // not really used
-
-      var refreshIfMinimumOf = tokenDuration - refreshTime
-      if (refreshIfMinimumOf <= 300) {
-        refreshIfMinimumOf = 300
-      }
-      if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
-        refreshIfMinimumOf = 3500
-      }
-      var lastTokenRefresh = getTokenLastRefresh()
-      // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
-      // console.error((tokenExpirationTime - currentTime))
-      // console.error(Math.abs(currentTime - lastTokenRefresh))
-      if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
-        // Trigger a token Refresh in 5 seconds to avoid 401's and ensure user-activity?
-        setTimeout(function() {
-          var currentTime = Math.round(new Date().getTime() / 1000)
+      console.error('GET TOKEN OF A' + getToken())
+      try {
+        if (getToken() !== undefined) {
           var playload = JSON.parse(atob(getToken().split('.')[1]))
           // var tokenExpirationTime = playload.exp
           var tokenDuration = playload.exp - playload.iat
@@ -96,18 +78,43 @@ const configHandler = function(config) {
           // console.error((tokenExpirationTime - currentTime))
           // console.error(Math.abs(currentTime - lastTokenRefresh))
           if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
-            if (!avoidDoubleRefresh) {
-              store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
-              store.dispatch('UpdateRefreshTime', currentTime).then(() => {
-                // if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
-                console.error('CALLING REFRESH TOKEN....')
-                return refreshToken({ config: config }).then((r) => {
-                  return r
-                })
-              })
-            }
+            // Trigger a token Refresh in 5 seconds to avoid 401's and ensure user-activity?
+            setTimeout(function() {
+              var currentTime = Math.round(new Date().getTime() / 1000)
+              var playload = JSON.parse(atob(getToken().split('.')[1]))
+              // var tokenExpirationTime = playload.exp
+              var tokenDuration = playload.exp - playload.iat
+              // Refresh token every X iterations 25% of expiration time
+              const refreshTime = tokenDuration * 25 / 100 // not really used
+
+              var refreshIfMinimumOf = tokenDuration - refreshTime
+              if (refreshIfMinimumOf <= 300) {
+                refreshIfMinimumOf = 300
+              }
+              if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
+                refreshIfMinimumOf = 3500
+              }
+              var lastTokenRefresh = getTokenLastRefresh()
+              // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
+              // console.error((tokenExpirationTime - currentTime))
+              // console.error(Math.abs(currentTime - lastTokenRefresh))
+              if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
+                if (!avoidDoubleRefresh) {
+                  store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
+                  store.dispatch('UpdateRefreshTime', currentTime).then(() => {
+                    // if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
+                    console.error('CALLING REFRESH TOKEN....')
+                    return refreshToken({ config: config }).then((r) => {
+                      return r
+                    })
+                  })
+                }
+              }
+            }, 5000)
           }
-        }, 5000)
+        }
+      } catch (er) {
+        console.error(er)
       }
     }
   }

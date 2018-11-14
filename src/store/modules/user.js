@@ -248,29 +248,43 @@ const user = {
           commit('SET_COGNITO_USER', cognitoUser)
           if (user && user.signInUserSession) {
             // TODO: Create a session with the UserId / Cognito User validation
+            var needMFA = false
             loginByUsernameThirdParty(cognitoUser.username, 'cognito', cognitoUser, store.getters.settings.cognito).then(response => {
               if (response && response.data) {
                 Auth.currentCredentials().then(credentials => {
                   commit('SET_CREDS', Auth.essentialCredentials(credentials))
                 })
 
-                window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
                 const data = response.data
                 commit('SET_TOKEN', data.token)
 
                 // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
                 // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
 
-                // cognitoUser.cacheTokens()
-                // cognitoUser = null
-                // commit('SET_COGNITO_USER', '')
+                console.error('ZZZ3 received data of ')
+                console.error(data)
+                console.error('SIGNIN MFA TYPE IS' + mfaType)
+                if (data.status === 'NeedMFA' && data.code) {
+                  commit('SET_NEED_MFA', data)
+                  // NeedMFA
+                  needMFA = true
+                  cognitoUser.challengeName = 'SOFTWARE_TOKEN_MFA'
+                  // cognitoUser.signInUserSession = null
+                  commit('SET_COGNITO_USER', cognitoUser)
+                  window.app.$message({ message: window.app.$t('login.needMfa') + '', type: 'success' })
+                } else {
+                  window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
+                  // cognitoUser.cacheTokens()
+                  // cognitoUser = null
+                  // commit('SET_COGNITO_USER', '')
 
-                setToken(response.data.token)
-                const newRefreshTime = Math.round(new Date().getTime() / 1000)
-                commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-                setTokenLastRefresh(newRefreshTime)
+                  setToken(response.data.token)
+                  const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                  commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                  setTokenLastRefresh(newRefreshTime)
+                }
               }
-              resolve()
+              resolve(!needMFA)
             }).catch(error => {
               if (error && error.response) {
                 if (error.response.status === 401) {
