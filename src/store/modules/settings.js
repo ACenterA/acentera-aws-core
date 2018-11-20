@@ -10,6 +10,7 @@ const settings = {
     recaptchaKey: '',
     mfaEnabled: false,
     firstTime: '',
+    stage: '',
     missingSiteEntry: false,
     stackUrl: '',
     plugins: {}, // add plugin hash to load plugins if needed..
@@ -42,6 +43,9 @@ const settings = {
     },
     SET_FIRST_TIME: (state, firstTime) => {
       state.firstTime = firstTime
+    },
+    SET_STAGE: (state, stg) => {
+      state.stage = stg
     },
     SET_MFA: (state, enable) => {
       state.mfaEnabled = enable
@@ -118,6 +122,7 @@ const settings = {
       console.error('resolve here UPDATE SETTING HERE 02')
       commit('SET_ALLOW_REGISTER', data.allowRegister)
       commit('SET_FIRST_TIME', data.firstTime)
+      commit('SET_STAGE', data.stage)
       commit('SET_MISSING_SITE_ENTRY', data.missingSiteEntry)
       commit('SET_STACK_URL', data.stackUrl)
       // commit('SET_PLUGINS', data.plugins)
