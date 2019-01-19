@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "build:prod": "cross-env NODE_ENV=production env_config=prod node build/build.js",
-    "embed": "go-bindata-assetfs -o ../acentera-cognito-base/static/main.go -pkg static dist/...",
-    "binary": "go-bindata-assetfs -o ../acentera-cognito-base/static/main.go -pkg static dist/...",
+    "embed": "go-bindata-assetfs -o bindata.go -pkg static dist/...",
+    "binary": "go-bindata-assetfs -o bindata.go -pkg static dist/...",
     "build:sit": "cross-env NODE_ENV=production env_config=sit node build/build.js",
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
@@ -36,7 +36,10 @@
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^2.0.26",
-    "aws-amplify": "1.0.11",
+    "vue-apollo": "latest",
+    "apollo-link": "latest",
+    "aws-appsync": "latest",
+    "aws-amplify": "latest",
     "axios": "0.18.0",
     "axios-cache-adapter": "^2.1.1",
     "clipboard": "1.7.1",

@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import VueApollo from 'vue-apollo'
 import Vuetify from 'vuetify'
 
 // # Importing jQuery for plugin load... temp addition
@@ -83,10 +84,29 @@ Object.keys(filters).forEach(key => {
 
 Vue.config.productionTip = false
 
+const apolloProvider = new VueApollo({
+  clients: {
+    acentera: function() {
+      console.error('acentera client test ')
+      return window.Apollo // store.$getters.ap
+    }
+  },
+  defaultClient: function() {
+    () => {
+      console.error('defualt client test here APOLLO')
+      console.error('defualt client test here APOLLO')
+      console.error('defualt client test here APOLLO')
+    }
+  }
+})
+
+Vue.use(VueApollo)
+
 const app = new Vue({
   el: '#app',
   router,
   store,
+  apolloProvider,
   i18n,
   render: h => h(App)
 })

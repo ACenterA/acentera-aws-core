@@ -24,6 +24,7 @@ const getters = {
   settings: state => state.settings,
   version: state => state.settings.version || '0.00',
   customclass: state => state.app.customClass,
+  apollo: state => state.user.apollo,
   isCognitoUser: state => {
     try {
       if (state.settings) {

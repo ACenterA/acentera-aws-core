@@ -79,6 +79,7 @@ const permission = {
         const asyncTestRouterMap = []
         var replaceUrls = {}
         const innerMenusHash = {}
+        console.error('IN ACTIVE PLUGIN')
         /* eslint-disable */
         if (window.asyncTestRouterMapTemp.length >= 1) {
           try {
@@ -86,6 +87,7 @@ const permission = {
               /* eslint-enable */
               console.error(input.path)
               if ((input.path || '').startsWith('/api/plugins/') || (input.path || '').startsWith('/')) {
+                console.error('RECEIVED PLUGIN TEST ACTIVE')
                 if (!input['layout']) {
                   input['component'] = Layout
                 } else {
@@ -209,6 +211,7 @@ const permission = {
           var tmpPluginWithoutUrl = basePluginWithout
           var tmpPromise = new Promise((rl, reject) => {
             $.ajax({
+              // url: tmpPluginUrl + '/manifest',
               url: tmpPluginUrl + '/',
               type: 'get',
               success: function(data) {

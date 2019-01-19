@@ -2,9 +2,19 @@ import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, regis
 import router from '@/router'
 import { Auth, Logger } from 'aws-amplify'
 
+// import { ApolloLink } from 'apollo-link'
+// import { ApolloLink, concat, split } from 'apollo-link';
+import { ApolloLink } from 'apollo-link'
+// import { HttpLink } from 'apollo-link-http'
+
 // TODO: Move request into api/user file
 import request from '@/utils/request'
 import Cookies from 'js-cookie'
+
+// import Vue from 'vue'
+// import VueApollo from 'vue-apollo'
+// import AWSAppSyncClient from 'aws-appsync'
+import AWSAppSyncClient, { createAppSyncLink } from 'aws-appsync'
 
 import store from '@/store'
 import { MessageBox, Message } from 'element-ui' // Message
@@ -50,6 +60,7 @@ const user = {
     setting: {
       articlePlatform: []
     },
+    apollo: null,
     cognito: null // getCognitoUser()
   },
 
@@ -104,13 +115,68 @@ const user = {
     SET_CREDS: (state, creds) => {
       console.error('SET CRED CALLED')
       console.error(creds)
+
+      // https://github.com/awslabs/aws-mobile-appsync-sdk-js/issues/105
+
       if (creds === '') {
         // No creds
         state.credentials = null
       } else {
         state.credentials = creds
+        // TODO: SET Apollo Client and infos
       }
       // setCredentials(creds)
+
+      const authMiddleware = new ApolloLink((operation, forward) => {
+        // add the authorization to the headers
+        const tk = getToken()
+        operation.setContext({
+          headers: {
+            'x-token': tk
+          }
+        })
+        return forward(operation)
+      })
+      const appSyncLink = createAppSyncLink({
+        url: 'https://zigg5nk7tbgqzj5fmv4ljeoq7m.appsync-api.us-east-1.amazonaws.com/graphql',
+        region: 'us-east-1', // config.appsync.REGION,
+        auth: {
+          type: 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
+          credentials: () => Auth.currentCredentials()
+          // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
+          // jwtToken: async () => (await Auth.currentSession()).getIdToken().getJwtToken()
+        }
+      },
+      {
+        defaultOptions: {
+          watchQuery: {
+            fetchPolicy: 'cache-and-network'
+          }
+        }
+      })
+
+      const link = ApolloLink.from([
+        authMiddleware,
+        appSyncLink
+      ])
+
+      const appSyncClient = new AWSAppSyncClient({}, { link })
+
+      /*
+      const appsyncProvider = new VueApollo({
+        // link: concat(authMiddleware, appSyncClient),
+        defaultClient: appSyncClient
+      })
+      */
+
+      state.apollo = appSyncClient // appSyncClient // appsyncProvider
+      // VuVue.use(VueApollo)
+      window.Apollo = appSyncClient // appsyncProvider // .provide()
+      // window.app.$apollo.client = appsyncProvider.provide()
+      // this.$apollo =
+      // Vue.Use(appsyncProvider.provide())
+      // console.error('SET APOLLO TO')
+      // console.error(window.Apollo)
     }
   },
   getters: {
