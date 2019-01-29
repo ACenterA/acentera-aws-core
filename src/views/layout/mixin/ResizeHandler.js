@@ -27,6 +27,9 @@ export default {
   methods: {
     isMobile() {
       const rect = body.getBoundingClientRect()
+      if (rect.width > 800) {
+        return false
+      }
       return rect.width - RATIO < WIDTH
     },
     resizeHandler() {

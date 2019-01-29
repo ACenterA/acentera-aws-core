@@ -1,8 +1,8 @@
 <template>
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&(mainsidebar.opened||sidebar.opened)" class="drawer-bg" @click="handleClickOutside"/>
-    <main-sidebar class="sidebar-container"/>
-    <sidebar class="sidebar-container"/>
+    <main-sidebar :class="mainSideBarClass" class="main sidebar-container"/>
+    <sidebar class="inner sidebar-container"/>
 
     <div :class="mainContainerClassObj" class="main-container">
       <navbar/>
@@ -38,6 +38,12 @@ export default {
     },
     device() {
       return this.$store.state.app.device
+    },
+    mainSideBarClass() {
+      return {
+        sidebarHighIndex: this.mainsidebar.visible,
+        sidebarLowIndex: !(this.mainsidebar.visible)
+      }
     },
     classObj() {
       return {

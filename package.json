@@ -11,6 +11,7 @@
     "binary": "go-bindata-assetfs -o bindata.go -pkg static dist/...",
     "build:sit": "cross-env NODE_ENV=production env_config=sit node build/build.js",
     "lint": "eslint --ext .js,.vue src",
+    "lint-fix": "lint-staged",
     "test": "npm run lint",
     "precommit": "lint-staged"
   },
@@ -37,6 +38,8 @@
   "dependencies": {
     "amazon-cognito-identity-js": "^2.0.26",
     "vue-apollo": "latest",
+    "apollo-link-state": "latest",
+    "apollo-cache-inmemory": "latest",
     "apollo-link": "latest",
     "aws-appsync": "latest",
     "aws-amplify": "latest",

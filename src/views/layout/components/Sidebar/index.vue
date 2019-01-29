@@ -1,6 +1,6 @@
 <template>
   <div style="z-index:900;background-color:white">
-    <hamburger :toggle-click="toggleSideBar" :is-hidden="isMainActive || isHidden" :is-active="!isMainActive" class="hamburger-container"/>
+    <hamburger :toggle-click="toggleSideBar" :is-hidden="isMainActive || isHidden" :is-active="!isMainActive" class="a1 hamburger-container"/>
     <br>
     <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="custom-wrapper">
       <el-menu
@@ -13,7 +13,7 @@
         class="el-menu-vertical-demo"
         text-color="#000000"
         active-text-color="#409EFF">
-        <inner-sidebar-item v-for="route in getPluginSideMenu()" :key="route.name" :item="route" :base-path="route.path"/>
+        <inner-sidebar-item v-for="route in getPluginSideMenu" :key="route.name" :item="route" :base-path="route.path"/>
       </el-menu>
     </el-scrollbar>
   </div>
@@ -31,13 +31,15 @@ export default {
   },
   data() {
     return {
-      tempActive: true
+      tempActive: true,
+      lastActivePlugin: 'none'
     }
   },
   computed: {
     ...mapGetters([
       'plugin_permission_routers',
       'sidebar',
+      'isLoading',
       'activePlugin',
       'mainsidebar',
       'device'
@@ -50,20 +52,29 @@ export default {
     },
     isHidden() {
       return !this.sidebar.visible
-    }
-  },
-  methods: {
+    },
     getPluginSideMenu() {
+      // if (this.isLoading)
+      console.error('did it change here ?' + this.activePlugin)
+      // if (this.lastActivePlugin !== this.activePlugin) {
+      // this.lastActivePlugin = this.activePlugin
       console.error('test a333a')
+      console.error('GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
+      console.error(this.plugin_permission_routers[this.activePlugin])
       if (this.plugin_permission_routers[this.activePlugin]) {
+        console.error('OK HERE DIDSPACH SHOW?')
         console.error('test a333bbb')
         this.$store.dispatch('showInnerSidebarForce')
         return this.plugin_permission_routers[this.activePlugin]
       } else {
+        console.error('OK HERE DIDSPACH HIDE?')
         console.error('test a333ccc')
         this.$store.dispatch('hideInnerSidebarForce')
       }
-    },
+      // }
+    }
+  },
+  methods: {
     toggleSideBar() {
       if (this.device === 'mobile') {
         this.toggleMainSideBar()

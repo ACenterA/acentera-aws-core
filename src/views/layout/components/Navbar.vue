@@ -1,6 +1,6 @@
 <template>
   <div class="navbar">
-    <hamburger :toggle-click="toggleSideBar" :is-hidden="!mainsidebar.visible" class="main hamburger-container"/>
+    <hamburger :toggle-click="toggleSideBar" class="main hamburger-container"/>
     <!-- breadcrumb class="breadcrumb-container" -->
 
     <div class="right-menu">

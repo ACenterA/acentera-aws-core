@@ -10,6 +10,12 @@
     margin-left: 0px;
   }
   // 侧边栏
+  .sidebarHighIndex {
+    z-index: 998 !important;
+  }
+  .sidebarLowIndex {
+    z-index: 889  !important;
+  }
   .sidebar-container {
     .hamburger-container {
         padding: 15px;
@@ -56,6 +62,7 @@
   }
   .hideSidebar {
     .sidebar-container {
+      // Maybe ?
       width: 36px !important;
     }
     .main-container {

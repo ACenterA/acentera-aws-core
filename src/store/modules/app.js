@@ -38,6 +38,9 @@ const app = {
     }
   },
   mutations: {
+    SET_ACTIVE_PLUGIN: (state, val) => {
+      state.activePlugin = val
+    },
     SET_CLASS: (state, val) => {
       state.customClass = val
     },
@@ -109,9 +112,19 @@ const app = {
       }
     },
     TOGGLE_MAIN_SIDEBAR: state => {
-      console.error('toggle g')
+      console.error('toggle g 11')
       state.mainsidebar.opened = !state.mainsidebar.opened
-      state.mainsidebar.visible = !state.mainsidebar.visible
+      if (state.innerSidebar === true) {
+        console.error('toggle g 11 inner?')
+        state.mainsidebar.visible = !state.mainsidebar.visible
+      } else {
+        console.error('toggle g 11 inner non?')
+        /*
+        if (state.mainsidebar.opened == true) {
+          state.mainsidebar.visible = !state.mainsidebar.visible
+        }
+        */
+      }
       state.mainsidebar.withoutAnimation = false
     },
     TOGGLE_MAIN_SIDEBAR_FORCE: state => {
@@ -328,18 +341,28 @@ const app = {
         commit('SHOW_MAIN_SIDEBAR', state.hideMenu)
         commit('HIDE_INNER_SIDEBAR', state.hideMenu)
       }
-      console.error('test class 1')
+      console.error('SHOWMENUA test class 1 set new showmenu of ...')
+      console.error(input)
+      if (input && input.to) {
+        console.error(input.to.meta)
+        if (input && input.to.meta && input.to.meta) {
+          console.error(input.to.meta.showMenu)
+        }
+      }
+      var actplugin = null
       if (input && input.to && input.to.meta && input.to.meta.showMenu) {
-        state.activePlugin = input.to.meta.showMenu
-        console.error('test class 2')
+        actplugin = input.to.meta.showMenu
+        console.error('SHOWMENUA test class 2')
         if (input.to.meta.class) {
-          console.error('test class 3')
+          console.error('SHOWMENUA test class 3')
           hasClass = input.to.meta.class
         }
       } else {
-        state.activePlugin = ''
+        actplugin = ''
       }
-      console.error('test class 4', hasClass)
+      console.error('SHOWMENUA test class 4', hasClass)
+      console.error('SHOWMENUA test class SATACITIVE ', actplugin)
+      commit('SET_ACTIVE_PLUGIN', actplugin)
       commit('SET_CLASS', hasClass)
     },
     toggleSideBar({ commit }) {

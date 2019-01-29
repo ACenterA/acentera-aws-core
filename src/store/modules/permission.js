@@ -65,7 +65,7 @@ const permission = {
       // console.error(obj.route)
       var path = obj.route.path
       if (obj.route.children) {
-        if (obj.route.children[0].path) {
+        if (obj.route.children[0] && obj.route.children[0].path) {
           path = path + '/' + obj.route.children[0].path
         }
       }
@@ -86,8 +86,11 @@ const permission = {
             for (var input = null; input = window.asyncTestRouterMapTemp.shift(); input !== undefined ) {
               /* eslint-enable */
               console.error(input.path)
-              if ((input.path || '').startsWith('/api/plugins/') || (input.path || '').startsWith('/')) {
-                console.error('RECEIVED PLUGIN TEST ACTIVE')
+              // if ((input.path || '').startsWith('/api/plugins/') || (input.path || '').startsWith('/')) {
+              console.error('RECEIVED PLUGIN TEST ACTIVE')
+              if (input['iscomponent'] === true) {
+                input['component'] = input['component']
+              } else {
                 if (!input['layout']) {
                   input['component'] = Layout
                 } else {
@@ -95,32 +98,33 @@ const permission = {
                     input['component'] = Layout
                   }
                 }
-                if (input['replacePrecedence'] && input['replacePath']) {
-                  var replacePath = input['replacePath']
-                  var replacePrecedence = input['replacePrecedence']
-                  if (!replaceUrls[replacePath]) {
-                    replaceUrls[replacePath] = {
-                      precedence: replacePrecedence,
-                      route: input
-                    }
-                  }
-                  if (replaceUrls[replacePath].precedence > replacePrecedence) {
-                    replaceUrls[replacePath] = {
-                      precedence: replacePrecedence,
-                      route: input
-                    }
-                  }
-                }
-                if (input['innerMenu']) {
-                  if (!innerMenusHash['innerMenu']) {
-                    innerMenusHash[input['innerMenu']] = []
-                  }
-                  innerMenusHash[input['innerMenu']].push(input)
-                }
-                console.error('got innermnu hash of ')
-                console.error(innerMenusHash)
-                asyncTestRouterMap.push(input)
               }
+              if (input['replacePrecedence'] && input['replacePath']) {
+                var replacePath = input['replacePath']
+                var replacePrecedence = input['replacePrecedence']
+                if (!replaceUrls[replacePath]) {
+                  replaceUrls[replacePath] = {
+                    precedence: replacePrecedence,
+                    route: input
+                  }
+                }
+                if (replaceUrls[replacePath].precedence > replacePrecedence) {
+                  replaceUrls[replacePath] = {
+                    precedence: replacePrecedence,
+                    route: input
+                  }
+                }
+              }
+              if (input['innerMenu']) {
+                if (!innerMenusHash['innerMenu']) {
+                  innerMenusHash[input['innerMenu']] = []
+                }
+                innerMenusHash[input['innerMenu']].push(input)
+              }
+              console.error('got innermnu hash of ')
+              console.error(innerMenusHash)
+              asyncTestRouterMap.push(input)
+              // }
             }
           } catch (ez) {
             console.error(ez)

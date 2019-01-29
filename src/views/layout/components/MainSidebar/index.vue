@@ -1,7 +1,7 @@
 <template>
   <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="sidebar-container">
-    <hamburger v-if="device == 'mobile' && isSidebarCollapse" :toggle-click="toggleSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
-    <hamburger v-if="device == 'desktop'" :toggle-click="toggleMainSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
+    <hamburger v-if="device == 'mobile' && isSidebarCollapse" :toggle-click="toggleSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="a2 hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
+    <hamburger v-if="device == 'desktop'" :toggle-click="toggleMainSideBar" :is-hidden="isToolHidden" :is-active="!isToolHidden" class="a3 hamburger-container" style="padding:15px;background-color: rgb(48, 65, 86);font-color:white;color:white"/>
     <el-menu
       :hidden="isHidden"
       :show-timeout="200"
@@ -38,7 +38,8 @@ export default {
       return !this.mainsidebar.opened
     },
     isHidden() {
-      return !this.mainsidebar.visible
+      // return !this.mainsidebar.visible
+      return (!this.sidebar.visible && !this.mainsidebar.visible)
     },
     isSidebarCollapse() {
       return !this.sidebar.opened

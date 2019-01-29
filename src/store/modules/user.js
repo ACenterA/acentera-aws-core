@@ -5,6 +5,7 @@ import { Auth, Logger } from 'aws-amplify'
 // import { ApolloLink } from 'apollo-link'
 // import { ApolloLink, concat, split } from 'apollo-link';
 import { ApolloLink } from 'apollo-link'
+// import { InMemoryCache } from 'apollo-cache-inmemory'
 // import { HttpLink } from 'apollo-link-http'
 
 // TODO: Move request into api/user file
@@ -14,7 +15,11 @@ import Cookies from 'js-cookie'
 // import Vue from 'vue'
 // import VueApollo from 'vue-apollo'
 // import AWSAppSyncClient from 'aws-appsync'
+// import AWSAppSyncClient, { createLinkWithCache, createAppSyncLink } from 'aws-appsync'
+// import AWSAppSyncClient, { createAppSyncLink, createLinkWithCache } from 'aws-appsync'
 import AWSAppSyncClient, { createAppSyncLink } from 'aws-appsync'
+
+// import { withClientState } from 'apollo-link-state'
 
 import store from '@/store'
 import { MessageBox, Message } from 'element-ui' // Message
@@ -137,6 +142,26 @@ const user = {
         })
         return forward(operation)
       })
+
+      // This is the same cache you pass into new ApolloClient
+      // const cache = new InMemoryCache()
+      /*
+      const stateLink = createLinkWithCache(cache => withClientState({
+        cache,
+        resolvers: {},
+        // resolvers,
+        // defaults
+        defaultOptions: {
+          watchQuery: {
+            fetchPolicy: 'no-cache'
+          }
+        }
+      }))
+      if (cache != null) {
+        console.error('no cache?')
+      }
+      */
+
       const appSyncLink = createAppSyncLink({
         url: 'https://zigg5nk7tbgqzj5fmv4ljeoq7m.appsync-api.us-east-1.amazonaws.com/graphql',
         region: 'us-east-1', // config.appsync.REGION,
@@ -145,17 +170,18 @@ const user = {
           credentials: () => Auth.currentCredentials()
           // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
           // jwtToken: async () => (await Auth.currentSession()).getIdToken().getJwtToken()
-        }
+        },
+        disableOffline: true
       },
       {
         defaultOptions: {
           watchQuery: {
-            fetchPolicy: 'cache-and-network'
+            fetchPolicy: 'no-cache'
           }
         }
       })
-
       const link = ApolloLink.from([
+        // stateLink,
         authMiddleware,
         appSyncLink
       ])
