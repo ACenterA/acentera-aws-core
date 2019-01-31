@@ -48,6 +48,20 @@ export const constantRouterMap = [
     hidden: true
   },
   {
+    path: '/bootstrap',
+    component: () => import('@/views/bootstrap/index'),
+    hidden: true,
+    children: [
+      {
+        path: '',
+        name: 'Bootstrap',
+        meta: {
+          title: 'bootstrap', icon: 'dashboard', noCache: true, hidden: true
+        }
+      }
+    ]
+  },
+  {
     path: '/auth-redirect',
     component: () => import('@/views/login/authredirect'),
     hidden: true

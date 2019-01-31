@@ -49,7 +49,6 @@ const permission = {
   },
   mutations: {
     SET_ROUTERS: (state, routers) => {
-      // console.error('SET OF ROUTERS.....')
       state.addRouters = routers
       state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
     },
@@ -61,14 +60,13 @@ const permission = {
       state.routers = constantRouterMap.concat(state.addPlugins).concat(state.addRouters)
     },
     SET_REPLACED_VIEW: (state, obj) => {
-      // console.error('REPLACE OF' + obj.path)
-      // console.error(obj.route)
       var path = obj.route.path
       if (obj.route.children) {
         if (obj.route.children[0] && obj.route.children[0].path) {
           path = path + '/' + obj.route.children[0].path
         }
       }
+      console.error('adding replace view of ' + obj.path + ' to ' + path)
       state.replacedViews[obj.path] = path
     }
   },
@@ -79,15 +77,12 @@ const permission = {
         const asyncTestRouterMap = []
         var replaceUrls = {}
         const innerMenusHash = {}
-        console.error('IN ACTIVE PLUGIN')
         /* eslint-disable */
         if (window.asyncTestRouterMapTemp.length >= 1) {
           try {
             for (var input = null; input = window.asyncTestRouterMapTemp.shift(); input !== undefined ) {
               /* eslint-enable */
-              console.error(input.path)
               // if ((input.path || '').startsWith('/api/plugins/') || (input.path || '').startsWith('/')) {
-              console.error('RECEIVED PLUGIN TEST ACTIVE')
               if (input['iscomponent'] === true) {
                 input['component'] = input['component']
               } else {
@@ -99,6 +94,7 @@ const permission = {
                   }
                 }
               }
+              console.error('processing of ... ' + input['path'] + 'with ' + input['replacePath'])
               if (input['replacePrecedence'] && input['replacePath']) {
                 var replacePath = input['replacePath']
                 var replacePrecedence = input['replacePrecedence']
@@ -115,14 +111,15 @@ const permission = {
                   }
                 }
               }
+              console.error('replace url is')
+              console.error(replaceUrls)
+
               if (input['innerMenu']) {
                 if (!innerMenusHash['innerMenu']) {
                   innerMenusHash[input['innerMenu']] = []
                 }
                 innerMenusHash[input['innerMenu']].push(input)
               }
-              console.error('got innermnu hash of ')
-              console.error(innerMenusHash)
               asyncTestRouterMap.push(input)
               // }
             }
@@ -130,6 +127,7 @@ const permission = {
             console.error(ez)
           }
           try {
+            console.error('will check fi set replace view SET_REPLACED_VIEW')
             for (var k in replaceUrls) {
               commit('SET_REPLACED_VIEW', { path: k, route: replaceUrls[k].route })
             }
@@ -143,27 +141,33 @@ const permission = {
             for (var w in innerMenusHash) {
               // Filter async router Test ... do we need ??
               const accessedInnerRoutersTmp = filterAsyncRouter(innerMenusHash[w], roles)
-              console.error(accessedInnerRoutersTmp)
               commit('ADD_INNER_PLUGINS', { plugin: w, routes: accessedInnerRoutersTmp })
             }
             if (accessedRoutersTmp) {
+              console.error('adding routes of ')
+              console.error(accessedRoutersTmp)
               window.app.$router.addRoutes(accessedRoutersTmp)
             }
+            console.error('resolving with ')
+            console.error(accessedRoutersTmp)
+            // window.plugin_loaded--;
             resolve(accessedRoutersTmp)
           } catch (ezz) {
             console.error(ezz)
           }
         } else {
-          console.error('resolving EMPTY HERE')
+          // window.plugin_loaded--;
           resolve([])
         }
       })
     },
     LoadPlugins({ commit }, data) {
+      console.error('loading using data')
+      console.error(data)
       var self = this
       var objToAdd = []
       var last = 0
-      var nFct = function(i, resolve, reject) {
+      var nFct = function(i, ress, reject) {
         try {
           var nbElem = objToAdd.length
           if (i < nbElem) {
@@ -173,27 +177,29 @@ const permission = {
               tmp.type = 'application/javascript'
               tmp.innerHTML = js.innerHTML
               document.body.appendChild(tmp)
-              nFct(i + 1, resolve, reject)
+              nFct(i + 1, ress, reject)
             } else {
               const tmp = document.createElement('script')
               tmp.type = 'application/javascript'
               tmp.onload = function() {
                 try {
-                  nFct(i + 1, resolve, reject)
+                  nFct(i + 1, ress, reject)
                 } catch (exx) {
                   console.error(exx.stack)
                 }
               }
               tmp.onerror = function() {
-                nFct(i + 1, resolve, reject)
+                nFct(i + 1, ress, reject)
               }
 
               tmp.src = js.src
               document.body.appendChild(tmp)
             }
           } else {
-            self.dispatch('ActivatePlugins', data)
-            resolve(true)
+            self.dispatch('ActivatePlugins', data).then(function(completedLoad) {
+              console.error('all loaded?')
+              ress(true)
+            })
           }
         } catch (z) {
           console.error(z)
@@ -224,13 +230,11 @@ const permission = {
                   var tmp = $(v)
                   if (tmp.attr('src') || tmp.attr('href')) {
                     var lnk = tmp.attr('src') || tmp.attr('href')
-                    // console.error('GOT LINK OF ' + lnk)
                     if (lnk.startsWith('/api/plugins/')) {
                       lnk = tmpPluginWithoutUrl + lnk
                     } else {
                       lnk = tmpPluginUrl + lnk
                     }
-
                     if (tmp.attr('src')) {
                       tmp.attr('src', lnk)
                     } else if (tmp.attr('href')) {
@@ -269,6 +273,7 @@ const permission = {
         }
 
         Promise.all(lstPromises).then(function(rr) {
+          console.error('all promise loaded?')
           if (objToAdd.length <= 0) {
             resolve(0) // no plugins
           } else {

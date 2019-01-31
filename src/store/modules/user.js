@@ -2,24 +2,9 @@ import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, regis
 import router from '@/router'
 import { Auth, Logger } from 'aws-amplify'
 
-// import { ApolloLink } from 'apollo-link'
-// import { ApolloLink, concat, split } from 'apollo-link';
-import { ApolloLink } from 'apollo-link'
-// import { InMemoryCache } from 'apollo-cache-inmemory'
-// import { HttpLink } from 'apollo-link-http'
-
 // TODO: Move request into api/user file
 import request from '@/utils/request'
 import Cookies from 'js-cookie'
-
-// import Vue from 'vue'
-// import VueApollo from 'vue-apollo'
-// import AWSAppSyncClient from 'aws-appsync'
-// import AWSAppSyncClient, { createLinkWithCache, createAppSyncLink } from 'aws-appsync'
-// import AWSAppSyncClient, { createAppSyncLink, createLinkWithCache } from 'aws-appsync'
-import AWSAppSyncClient, { createAppSyncLink } from 'aws-appsync'
-
-// import { withClientState } from 'apollo-link-state'
 
 import store from '@/store'
 import { MessageBox, Message } from 'element-ui' // Message
@@ -65,7 +50,6 @@ const user = {
     setting: {
       articlePlatform: []
     },
-    apollo: null,
     cognito: null // getCognitoUser()
   },
 
@@ -118,9 +102,6 @@ const user = {
       // setCognitoUserInfo(cognitoUser)
     },
     SET_CREDS: (state, creds) => {
-      console.error('SET CRED CALLED')
-      console.error(creds)
-
       // https://github.com/awslabs/aws-mobile-appsync-sdk-js/issues/105
 
       if (creds === '') {
@@ -130,79 +111,6 @@ const user = {
         state.credentials = creds
         // TODO: SET Apollo Client and infos
       }
-      // setCredentials(creds)
-
-      const authMiddleware = new ApolloLink((operation, forward) => {
-        // add the authorization to the headers
-        const tk = getToken()
-        operation.setContext({
-          headers: {
-            'x-token': tk
-          }
-        })
-        return forward(operation)
-      })
-
-      // This is the same cache you pass into new ApolloClient
-      // const cache = new InMemoryCache()
-      /*
-      const stateLink = createLinkWithCache(cache => withClientState({
-        cache,
-        resolvers: {},
-        // resolvers,
-        // defaults
-        defaultOptions: {
-          watchQuery: {
-            fetchPolicy: 'no-cache'
-          }
-        }
-      }))
-      if (cache != null) {
-        console.error('no cache?')
-      }
-      */
-
-      const appSyncLink = createAppSyncLink({
-        url: 'https://zigg5nk7tbgqzj5fmv4ljeoq7m.appsync-api.us-east-1.amazonaws.com/graphql',
-        region: 'us-east-1', // config.appsync.REGION,
-        auth: {
-          type: 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
-          credentials: () => Auth.currentCredentials()
-          // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
-          // jwtToken: async () => (await Auth.currentSession()).getIdToken().getJwtToken()
-        },
-        disableOffline: true
-      },
-      {
-        defaultOptions: {
-          watchQuery: {
-            fetchPolicy: 'no-cache'
-          }
-        }
-      })
-      const link = ApolloLink.from([
-        // stateLink,
-        authMiddleware,
-        appSyncLink
-      ])
-
-      const appSyncClient = new AWSAppSyncClient({}, { link })
-
-      /*
-      const appsyncProvider = new VueApollo({
-        // link: concat(authMiddleware, appSyncClient),
-        defaultClient: appSyncClient
-      })
-      */
-
-      state.apollo = appSyncClient // appSyncClient // appsyncProvider
-      // VuVue.use(VueApollo)
-      window.Apollo = appSyncClient // appsyncProvider // .provide()
-      // window.app.$apollo.client = appsyncProvider.provide()
-      // this.$apollo =
-      // Vue.Use(appsyncProvider.provide())
-      // console.error('SET APOLLO TO')
-      // console.error(window.Apollo)
     }
   },
   getters: {
@@ -353,9 +261,6 @@ const user = {
                 // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
                 // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
 
-                console.error('ZZZ3 received data of ')
-                console.error(data)
-                console.error('SIGNIN MFA TYPE IS' + mfaType)
                 if (data.status === 'NeedMFA' && data.code) {
                   commit('SET_NEED_MFA', data)
                   // NeedMFA
@@ -653,13 +558,10 @@ const user = {
     GetUserInfo({ commit, state }) {
       return new Promise((resolve, reject) => {
         getUserInfo(state.token).then(response => {
-          console.error('Received getUserInfo RESP')
-          console.error(response)
           if (!response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
             reject('error')
           }
           const data = response.data
-          console.error('Received getUserInfo RESP - 1 ')
           if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
             var lowerCaseRoles = []
             var roleLen = data.roles.length
@@ -671,7 +573,6 @@ const user = {
           } else {
             reject('getInfo: roles must be a non-null array !')
           }
-          console.error('Received getUserInfo RESP - 2 ')
           if (!Cookies.get('language')) {
             if (data.language) {
               commit('SET_LANGUAGE', data.language)
@@ -681,10 +582,8 @@ const user = {
           commit('SET_NAME', data.name)
           commit('SET_AVATAR', data.avatar || 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif')
           commit('SET_INTRODUCTION', data.introduction)
-          console.error('Received getUserInfo RESP - 3 ')
           resolve(response)
         }).catch(error => {
-          console.error('Received getUserInfo REJECTING - 1 ')
           reject(error)
         })
       })

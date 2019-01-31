@@ -39,7 +39,7 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegisterFirst">{{ $t('login.signUp') }}</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleRegisterFirst">{{ $t('login.loginSubmit') }}</el-button>
 
     </el-form>
 
@@ -99,6 +99,12 @@ export default {
     isMissingEntry() {
       if (this.$store && this.$store.getters && this.$store.getters.settings) {
         return this.$store.getters.settings.missingSiteEntry === true
+      }
+      return false
+    },
+    isMissingDB() {
+      if (this.$store && this.$store.getters && this.$store.getters.settings) {
+        return this.$store.getters.settings.missingDB === true
       }
       return false
     }

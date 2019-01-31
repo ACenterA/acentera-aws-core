@@ -1,8 +1,8 @@
 <template>
   <div class="login-container">
-    <div v-if="isMissingEntry">
+    <div v-if="isMissingDB">
       <!-- missing entry -->
-      <el-form v-if="activeName!='Forgot'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+      <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
         <div class="title-container">
           <lang-select class="set-language"/>
           <br><br><br>
@@ -10,7 +10,37 @@
         </div>
       </el-form>
     </div>
-    <div v-if="!isMissingEntry">
+    <div v-if="!isMissingDB && isMissingEntry">
+      <!-- missing entry -->
+      <el-form ref="loginForm" :model="setupForm" :rules="setupRules" class="login-form" auto-complete="on" label-position="left">
+        <div class="title-container" style="text-align:center;margin-bottom:30px;">
+          <lang-select class="set-language"/>
+          <br><br><br>
+          <h4 class="title">{{ $t('login.siteSetup') }}</h4>
+        </div>
+
+        <div class="title-container" style="text-align:center;margin-bottom:30px;">
+          <div class="title-small">{{ $t('login.validateAWSAccountId') }}</div>
+        </div>
+
+        <el-form-item prop="accountid">
+          <span class="svg-container svg-container_login">
+            <svg-icon icon-class="user" />
+          </span>
+          <el-input-number
+            v-model="setupForm.accountid"
+            :placeholder="$t('login.accountid')"
+            :controls="false"
+            name="accountid"
+            auto-complete="on"
+          />
+        </el-form-item>
+
+        <el-button :loading="loading" type="primary" style="width:100%;margin-top:30px;margin-bottom:30px;" @click.native.prevent="handleValidateAccountId">{{ $t('login.loginSubmit') }}</el-button>
+
+      </el-form>
+    </div>
+    <div v-if="!isMissingDB && !isMissingEntry">
       <!-- !missing entry - 1 -->
       <div v-if="isLoginCodeReset">
         <!-- isLoginCodeReset -->
@@ -344,7 +374,7 @@
 </template>
 
 <script>
-import { isvalidUsername } from '@/utils/validate'
+import { isvalidUsername, isvalidAccount } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import { mapGetters } from 'vuex'
 import { SelfBuildingSquareSpinner } from 'epic-spinners'
@@ -370,6 +400,15 @@ export default {
         callback()
       }
     }
+
+    const validateAccount = (rule, value, callback) => {
+      if (!isvalidAccount(value)) {
+        callback(new Error(this.$t('login.AccountIdRequirements')))
+      } else {
+        callback()
+      }
+    }
+
     const validatePassword = (rule, value, callback) => {
       if (value && value.length < 6) {
         callback(new Error(this.$t('login.PasswordDigitRequirements'))) // 'The password can not be less than 6 digits'))
@@ -391,6 +430,9 @@ export default {
       },
       requiredAttributes: {
       },
+      setupForm: {
+        accountid: ''
+      },
       loginForm: {
         username: null,
         password: null,
@@ -400,6 +442,9 @@ export default {
         username: null,
         password: null,
         code: null
+      },
+      setupRules: {
+        accountid: [{ required: true, trigger: 'blur', validator: validateAccount }]
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -452,6 +497,13 @@ export default {
         return this.$store.getters.settings.missingSiteEntry === true
       }
       return false
+    },
+    isMissingDB() {
+      if (this.$store && this.$store.getters && this.$store.getters.settings) {
+        return this.$store.getters.settings.missingDB === true
+      }
+      console.error('aa')
+      return true
     }
   },
   watch: {
@@ -494,6 +546,7 @@ export default {
       this.passwordChangeForm['oldPassword'] = null
       this.passwordChangeForm['password'] = null
       this.passwordChangeForm['passwordConfirm'] = null
+      this.setupForm.accountid = ''
     },
     handleCancelCode() {
       this.loading = true
@@ -503,6 +556,31 @@ export default {
         this.loading = false
       }).catch(() => {
         this.loading = false
+      })
+    },
+    handleValidateAccountId() {
+      this.loading = true
+      var postData = {
+        accountid: this.setupForm.accountid
+      }
+      var self = this
+      this.$store.dispatch('ValidateAccountIdSetup', postData).then((resp) => {
+        if (resp === true) {
+          console.error('gott it')
+          self.resetForm()
+          console.error('set path to ')
+          self.$router.push({ path: '/bootstrap' })
+          console.error('set path to  nice')
+          setTimeout(function() {
+            self.loading = false
+          }, 2000)
+        } else {
+          // todo: show error ??
+          self.loading = false
+        }
+      }).catch(() => {
+        // todo: show error message
+        self.loading = false
       })
     },
     handleAssignDeviceConfirm() {
@@ -784,6 +862,13 @@ $break-large: 700px;
       text-align: center;
       font-weight: bold;
     }
+    .title-small {
+      font-size: 18px;
+      color: $light_gray;
+      margin: 0px auto 30px auto;
+      text-align: center;
+      font-weight: bold;
+    }
     .titleFirstTime {
       color: $light_gray;
       margin: 0px auto 10px auto;
@@ -834,6 +919,10 @@ $break-large: 700px;
 }
 .el-form-item.forceblack {
   background-color:black!important;
+}
+
+.el-input-number--medium {
+  width: 80%
 }
 
 </style>

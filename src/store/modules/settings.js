@@ -1,7 +1,21 @@
 import store from '@/store'
 import { getSiteSettings } from '@/api/app.js'
+import { getToken, getTokenLastRefresh, refreshToken } from '@/utils/auth'
 import { getSettingsToken, setSettingsToken } from '@/utils/settings.js'
 import { getSiteConfiguration } from '@/api/app'
+import { Auth } from 'aws-amplify'
+
+// import { ApolloLink } from 'apollo-link'
+// import { ApolloLink, concat, split } from 'apollo-link'
+import { ApolloLink } from 'apollo-link'
+import { setContext } from 'apollo-link-context'
+// import { InMemoryCache } from 'apollo-cache-inmemory'
+// import { HttpLink } from 'apollo-link-http'
+
+// import AWSAppSyncClient, { createLinkWithCache, createAppSyncLink } from 'aws-appsync'
+// import AWSAppSyncClient, { createAppSyncLink, createLinkWithCache } from 'aws-appsync'
+import AWSAppSyncClient, { createAppSyncLink } from 'aws-appsync'
+// import { withClientState } from 'apollo-link-state'
 
 const settings = {
   state: {
@@ -14,7 +28,25 @@ const settings = {
     missingSiteEntry: false,
     stackUrl: '',
     plugins: {}, // add plugin hash to load plugins if needed..
+    apollo: null,
+    graphql: {},
     cognito: {
+      s3: {
+        REGION: 'YOUR_S3_UPLOADS_BUCKET_REGION',
+        BUCKET: 'YOUR_S3_UPLOADS_BUCKET_NAME'
+      },
+      apiGateway: {
+        REGION: 'YOUR_API_GATEWAY_REGION',
+        URL: 'YOUR_API_GATEWAY_URL'
+      },
+      cognito: {
+        REGION: '', // 'YOUR_COGNITO_REGION',
+        USER_POOL_ID: '', // 'YOUR_COGNITO_USER_POOL_ID',
+        APP_CLIENT_ID: '', // 'YOUR_COGNITO_APP_CLIENT_ID',
+        IDENTITY_POOL_ID: '' // 'YOUR_IDENTITY_POOL_ID'
+      }
+    },
+    aws: {
       s3: {
         REGION: 'YOUR_S3_UPLOADS_BUCKET_REGION',
         BUCKET: 'YOUR_S3_UPLOADS_BUCKET_NAME'
@@ -59,10 +91,152 @@ const settings = {
     SET_STACK_URL: (state, stackUrl) => {
       state.stackUrl = stackUrl
     },
+    SET_GRAPHQL: (state, graphql) => {
+      state.graphql = graphql || state.graphql
+      if (state.graphql && (state.graphql.url || state.graphql.URL)) {
+        // This is the same cache you pass into new ApolloClient
+        // const cache = new InMemoryCache()
+        /*
+        const stateLink = createLinkWithCache(cache => withClientState({
+          cache,
+          resolvers: {},
+          // resolvers,
+          // defaults
+          defaultOptions: {
+            watchQuery: {
+              fetchPolicy: 'no-cache'
+            }
+          }
+        }))
+        if (cache != null) {
+          console.error('no cache?')
+        }
+        */
+        const getAccessToken = async function() {
+          return new Promise(function(resolve, reject) {
+            // const authMiddleware = new ApolloLink((operation, forward) => {
+            // add the authorization to the headers
+            var config = {}
+            var tk = getToken()
+            if (tk) {
+              // With the User Token we have received, lets make sure to refresh the token
+              // Every here and there ...
+              // Submit another refresh Token to replace the current token ...
+              var currentTime = Math.round(new Date().getTime() / 1000)
+              try {
+                if (getToken() !== undefined) {
+                  var playload = JSON.parse(atob(getToken().split('.')[1]))
+                  // var tokenExpirationTime = playload.exp
+                  var tokenDuration = playload.exp - playload.iat
+                  // Refresh token every X iterations 25% of expiration time
+                  const refreshTime = tokenDuration * 25 / 100 // not really used
+
+                  var refreshIfMinimumOf = tokenDuration - refreshTime
+                  if (refreshIfMinimumOf <= 300) {
+                    refreshIfMinimumOf = 300
+                  }
+                  if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
+                    refreshIfMinimumOf = 3500
+                  }
+                  var lastTokenRefresh = getTokenLastRefresh()
+                  if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
+                    // Trigger a token Refresh in 5 seconds to avoid 401's and ensure user-activity?
+                    // var currentTime = Math.round(new Date().getTime() / 1000)
+                    // var playload = JSON.parse(atob(getToken().split('.')[1]))
+                    // var tokenExpirationTime = playload.exp
+                    // var tokenDuration = playload.exp - playload.iat
+                    // Refresh token every X iterations 25% of expiration time
+                    const refreshTime = tokenDuration * 25 / 100 // not really used
+
+                    refreshIfMinimumOf = tokenDuration - refreshTime
+                    if (refreshIfMinimumOf <= 300) {
+                      refreshIfMinimumOf = 300
+                    }
+                    if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
+                      refreshIfMinimumOf = 3500
+                    }
+                    lastTokenRefresh = getTokenLastRefresh()
+                    if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
+                      store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
+                      return store.dispatch('UpdateRefreshTime', currentTime).then(() => {
+                        // if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
+                        refreshToken({ config: config }).then((r) => {
+                          tk = getToken()
+                          return resolve(tk)
+                        })
+                      })
+                    }
+                  }
+                }
+              } catch (er) {
+                if (er) {
+                  return resolve(tk)
+                  // console.error(er)
+                }
+              }
+            }
+            return resolve(tk)
+          })
+        }
+
+        const authMiddleware = setContext(async req => {
+          const tk = await getAccessToken()
+          return {
+            headers: {
+              'x-token': tk
+            }
+          }
+        })
+
+        const appSyncLink = createAppSyncLink({
+          url: state.graphql.URL || state.graphql.url,
+          region: state.graphql.REGION || state.graphql.region, // config.appsync.REGION,
+          auth: {
+            type: state.graphql.AUTH_TYPE || 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
+            credentials: () => Auth.currentCredentials()
+            // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
+          },
+          disableOffline: true
+        },
+        {
+          defaultOptions: {
+            watchQuery: {
+              fetchPolicy: 'no-cache'
+            }
+          }
+        })
+        const link = ApolloLink.from([
+          // stateLink,
+          authMiddleware,
+          appSyncLink
+        ])
+
+        const appSyncClient = new AWSAppSyncClient({}, { link })
+
+        /*
+        const appsyncProvider = new VueApollo({
+          // link: concat(authMiddleware, appSyncClient),
+          defaultClient: appSyncClient
+        })
+        */
+
+        state.apollo = appSyncClient // appSyncClient // appsyncProvider
+        // VuVue.use(VueApollo)
+        window.Apollo = appSyncClient // appsyncProvider // .provide()
+        // window.app.$apollo.client = appsyncProvider.provide()
+        // this.$apollo =
+        // Vue.Use(appsyncProvider.provide())
+        // console.error(window.Apollo)
+      }
+    },
     SET_COGNITO: (state, cognito) => {
       try {
+        console.error('set cognito to ...')
+        console.error(cognito)
+        state.aws = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
         state.cognito = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
-
+        console.error('set cognito to ...')
+        console.error(cognito)
         if (!state.cognito.s3) {
           state.cognito.s3 = {}
         }
@@ -76,6 +250,8 @@ const settings = {
         }
 
         const config = state.cognito
+        console.error('now set amplify to')
+        console.error(config)
         if (config.cognito) {
           window.Amplify.configure({
             Auth: {
@@ -116,10 +292,8 @@ const settings = {
     },
     UpdateSiteSettings({ commit, state }, input) {
       var data = input.data || input
-      console.error('resolve here UPDATE SETTING HERE 01')
       commit('SET_LOADED', true)
       commit('SET_RECAPCHA_KEY', data.recaptchaKey)
-      console.error('resolve here UPDATE SETTING HERE 02')
       commit('SET_ALLOW_REGISTER', data.allowRegister)
       commit('SET_FIRST_TIME', data.firstTime)
       commit('SET_STAGE', data.stage)
@@ -127,20 +301,19 @@ const settings = {
       commit('SET_STACK_URL', data.stackUrl)
       // commit('SET_PLUGINS', data.plugins)
       commit('SET_MFA', data.mfaEnabled)
-      commit('SET_COGNITO', data.cognito || data.Cognito) // somehow its uppercase?
-
+      commit('SET_COGNITO', data.aws || data.Aws || data.cognito || data.Cognito) // somehow its uppercase?
+      if (data.aws && data.aws.graphql) {
+        commit('SET_GRAPHQL', data.aws.graphql || data.graphql || data.Graphql) // somehow its uppercase?
+      } else {
+        commit('SET_GRAPHQL', data.graphql || data.Graphql) // somehow its uppercase?
+      }
       setSettingsToken(data)
     },
     GetSiteConfiguration({ commit, state }) {
-      console.error('resolve here a GetSiteConfig 01')
       return new Promise((resolve, reject) => {
         getSiteConfiguration(state.token).then(response => {
-          console.error('received state config?')
           // This returns the list of plugins
           if (response && response.data) {
-            console.error('plugins of')
-            console.error(response.data)
-            console.error(store)
             var Plugins = {}
             for (var k in response.data.plugins) {
               var tmpPlugin = response.data.plugins[k]
@@ -148,7 +321,6 @@ const settings = {
             }
             commit('SET_PLUGINS', Plugins)
           }
-          console.error(response)
           resolve(true)
         }).catch((ex) => {
           console.error(ex)
@@ -157,7 +329,6 @@ const settings = {
       })
     },
     GetSiteSettings({ commit, state }) {
-      console.error('resolve here a GetSiteSettings')
       return new Promise((resolve, reject) => {
         if (state.isLoaded || (window.preventLoop === true)) { // preventLoop not really works when using Uglify and chunks ?
           resolve('loaded')
@@ -169,42 +340,30 @@ const settings = {
           if (data) {
             store.dispatch('UpdateSiteSettings', { data }).then(() => {
               hasResolved = true
-              console.error('resolve here a 01 ')
               resolve('resolve')
             })
           }
-          console.error('resolve here a 02')
           // We will update based on rest api if needed
           getSiteSettings().then(response => {
-            console.error('resolve here a 03')
-            console.error('get info')
             if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
-              console.error('resolve here a 04')
               // Save app Settings ...
               const data = response.data
-              console.error('resolve here a 05')
+              console.error('updadtting site setting data using ...')
               store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
-                console.error('resolve here a 06')
                 if (!hasResolved) {
-                  console.error('resolve here a 07')
                   hasResolved = true
-                  console.error('resolve here a 08')
                   resolve('resolve fetch')
                 }
-                console.error('resolve here a 09')
               })
             }
-            console.error('resolve here a 10')
             if (!hasResolved) {
-              console.error('resolve here a 12')
               resolve('forced_no_internet_or_cookies')
             }
           }).catch(err => {
-            console.error('resolve here a 13')
             console.error(err)
-            if (err) {
-              console.error('could not refresh cache')
-            }
+            // if (err) {
+            //  console.error('could not refresh cache')
+            // }
             resolve()
           })
           /*

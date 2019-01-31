@@ -44,8 +44,6 @@ const cachedService = axios.create({
 var avoidDoubleRefresh = false
 const configHandler = function(config) {
   // Do something before request is sent
-  console.error('do we have a token?')
-  console.error(getToken())
   if (getToken()) {
     // With the User Token we have received, lets make sure to refresh the token
     // Every here and there ...
@@ -53,11 +51,8 @@ const configHandler = function(config) {
     config.headers['X-Token'] = getToken()
     config.headers['X-Version'] = getVersion()
 
-    console.error('do we have a token A?')
-    console.error(config.headers)
     if (config && !config.url.endsWith('/token/refresh')) {
       var currentTime = Math.round(new Date().getTime() / 1000)
-      console.error('GET TOKEN OF A' + getToken())
       try {
         if (getToken() !== undefined) {
           var playload = JSON.parse(atob(getToken().split('.')[1]))
@@ -74,9 +69,6 @@ const configHandler = function(config) {
             refreshIfMinimumOf = 3500
           }
           var lastTokenRefresh = getTokenLastRefresh()
-          // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
-          // console.error((tokenExpirationTime - currentTime))
-          // console.error(Math.abs(currentTime - lastTokenRefresh))
           if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
             // Trigger a token Refresh in 5 seconds to avoid 401's and ensure user-activity?
             setTimeout(function() {
@@ -95,15 +87,11 @@ const configHandler = function(config) {
                 refreshIfMinimumOf = 3500
               }
               var lastTokenRefresh = getTokenLastRefresh()
-              // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
-              // console.error((tokenExpirationTime - currentTime))
-              // console.error(Math.abs(currentTime - lastTokenRefresh))
               if ((Math.abs(currentTime - lastTokenRefresh) >= 3000)) { // every hour for now, due to cognito
                 if (!avoidDoubleRefresh) {
                   store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
                   store.dispatch('UpdateRefreshTime', currentTime).then(() => {
                     // if ((tokenExpirationTime - currentTime) < refreshIfMinimumOf) {
-                    console.error('CALLING REFRESH TOKEN....')
                     return refreshToken({ config: config }).then((r) => {
                       return r
                     })
@@ -114,12 +102,12 @@ const configHandler = function(config) {
           }
         }
       } catch (er) {
-        console.error(er)
+        if (er) {
+          return config // console.error(er)
+        }
       }
     }
   }
-  console.error('do we have a token returning?')
-  console.error(config.headers)
   return config
 }
 
@@ -134,7 +122,6 @@ const handleSuccess = function(response) {
     }
 
     if (res.status === 401) {
-      console.error('RECEIVED SUCCESS OF 401 ???????')
       // return store.dispatch('LogOut').then(() => {
       //   location.reload()// In order to re-instantiate the vue-router object to avoid bugs
       // })
@@ -196,87 +183,70 @@ const handleError = function(error, test) {
       err['config'] = config
       err['response'] = resp
     }
-    console.error('received error here 1')
     if (!err.config) {
       err = error
     }
 
-    console.error('received error here 1 config 1')
     // if (config && config.url.endsWith('/login/logout')) {
-    console.error(config)
-    console.error(err)
     if (config && config.url.endsWith('/login/logout')) {
-      console.error('received error here 1 config 2')
       if (resp.status === 401 || resp.status === 404) {
         return resolve()
       }
     } else {
-      console.error('received error here 1 config 3')
-      console.error(resp)
       if (resp && resp.status === 401) {
-        console.error('received error here 1 config 4')
         // TODO: The plugin might want to only receive the Reject error instead and handle this on his side
         if (config && !config.url.endsWith('/token/refresh')) {
-          console.error('received error here 1 config 5')
-          console.error('received error here 1 config 5 a1')
           store.dispatch('GET_CREDENTIALS') // If Cognito make sure we have valid AWS Keys
-          console.error('received error here 1 config 5 a2')
-          console.error('received error here 1 config 5a3')
 
           var currentTime = Math.round(new Date().getTime() / 1000)
-          var playload = JSON.parse(atob(getToken().split('.')[1]))
-          // var tokenExpirationTime = playload.exp
-          var tokenDuration = playload.exp - playload.iat
-          // Refresh token every X iterations 25% of expiration time
-          const refreshTime = tokenDuration * 25 / 100 // not really used
+          try {
+            var playload = JSON.parse(atob(getToken().split('.')[1]))
+            // var tokenExpirationTime = playload.exp
+            var tokenDuration = playload.exp - playload.iat
+            // Refresh token every X iterations 25% of expiration time
+            const refreshTime = tokenDuration * 25 / 100 // not really used
 
-          var refreshIfMinimumOf = tokenDuration - refreshTime
-          if (refreshIfMinimumOf <= 300) {
-            refreshIfMinimumOf = 300
-          }
-          if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
-            refreshIfMinimumOf = 3500
-          }
-          var lastTokenRefresh = getTokenLastRefresh()
-          // console.error('alst refresh was ' + Math.abs(currentTime - lastTokenRefresh))
-          // console.error((tokenExpirationTime - currentTime))
-          console.error('last refresh .... was')
-          // console.error(Math.abs(currentTime - lastTokenRefresh))
-          if ((Math.abs(currentTime - lastTokenRefresh) >= 300)) { // Make sure only 1 refresh per 5 minutes (avoid loops)
-            avoidDoubleRefresh = true
-            // if ((Math.abs(currentTime - lastTokenRefresh) >= 3500)) { // Make sure the end-user wasn't away for maximum of 1 hour ...  ???
-            console.error('last refresh .... was ok lets try it ')
-            return store.dispatch('UpdateRefreshTime', currentTime).then(() => {
-              console.error('last refresh .... was ok lets try it ok refreshing ')
-              refreshToken({ config: config }).then((r) => {
-                avoidDoubleRefresh = false
-                console.error('received error here 1 config 5a4')
-                // error.config.headers['Authorization'] = 'Bearer ' + store.state.auth.token;
-                error.config.headers['Authorization'] = getToken()
-                error.config.baseURL = undefined
-                console.error('received error here 1 config 5a6')
-                resolve(service.request(error.config))
-              }).catch((err) => {
-                avoidDoubleRefresh = false
-                console.error('received error here 1 config 5a7')
-                console.error('WOULD OF LOGGED OUT HERE 1')
-                console.error('WOULD OF LOGGED OUT HERE 1')
-                console.error('WOULD OF LOGGED OUT HERE 1')
-                err['message'] = window.app.$t('error.SessionTimedout')
-                store.dispatch('LogOut')
-                router.push({ path: '/', replace: true, query: { noGoBack: false }})
-                return reject(err)
+            var refreshIfMinimumOf = tokenDuration - refreshTime
+            if (refreshIfMinimumOf <= 300) {
+              refreshIfMinimumOf = 300
+            }
+            if (refreshIfMinimumOf >= 3500) { // refresh minimum of 1hour
+              refreshIfMinimumOf = 3500
+            }
+            var lastTokenRefresh = getTokenLastRefresh()
+            // console.error('last refresh was ' + Math.abs(currentTime - lastTokenRefresh))
+            // console.error((tokenExpirationTime - currentTime))
+            // console.error(Math.abs(currentTime - lastTokenRefresh))
+            if ((Math.abs(currentTime - lastTokenRefresh) >= 300)) { // Make sure only 1 refresh per 5 minutes (avoid loops)
+              avoidDoubleRefresh = true
+              // if ((Math.abs(currentTime - lastTokenRefresh) >= 3500)) { // Make sure the end-user wasn't away for maximum of 1 hour ...  ???
+              return store.dispatch('UpdateRefreshTime', currentTime).then(() => {
+                refreshToken({ config: config }).then((r) => {
+                  avoidDoubleRefresh = false
+                  // error.config.headers['Authorization'] = 'Bearer ' + store.state.auth.token;
+                  error.config.headers['Authorization'] = getToken()
+                  error.config.baseURL = undefined
+                  resolve(service.request(error.config))
+                }).catch((err) => {
+                  avoidDoubleRefresh = false
+                  err['message'] = window.app.$t('error.SessionTimedout')
+                  store.dispatch('LogOut')
+                  router.push({ path: '/', replace: true, query: { noGoBack: false }})
+                  return reject(err)
+                })
               })
-            })
-          } else {
-            err['message'] = window.app.$t('error.SessionTimedout')
-            store.dispatch('LogOut')
-            router.push({ path: '/', replace: true, query: { noGoBack: false }})
-            return reject(err)
+            } else {
+              err['message'] = window.app.$t('error.SessionTimedout')
+              store.dispatch('LogOut')
+              router.push({ path: '/', replace: true, query: { noGoBack: false }})
+              return reject(err)
+            }
+          } catch (e) {
+            if (e) {
+              return reject(err)
+            }
           }
         } else {
-          console.error('received error here 1 config 6')
-          console.error('WOULD OF LOGGED OUT HERE')
           store.dispatch('LogOut')
           router.push({ path: '/', replace: true, query: { noGoBack: false }})
           err['message'] = window.app.$t('error.SessionTimedout')
@@ -285,7 +255,6 @@ const handleError = function(error, test) {
           // router.push({ path: '/', replace: true, query: { noGoBack: false }})
         }
       }
-      console.error('received error here 1 config 8')
       // API Is Down
       if (!resp) {
         router.push({ path: '/error/no_api_access', replace: true, query: { noGoBack: false }})

@@ -16,3 +16,19 @@ export function getSiteConfiguration(token) {
     method: 'get'
   })
 }
+
+export function validateAccountId(data) {
+  return request({
+    url: '/app/setup/validate',
+    method: 'post',
+    data
+  })
+}
+
+export function performAppInitialization(data) {
+  return request({
+    url: '/app/setup/bootstrap',
+    method: 'post',
+    data
+  })
+}

@@ -24,11 +24,16 @@ const getters = {
   settings: state => state.settings,
   version: state => state.settings.version || '0.00',
   customclass: state => state.app.customClass,
-  apollo: state => state.user.apollo,
+  apollo: state => state.settings.apollo,
+  graphql: state => state.settings.graphql,
   isCognitoUser: state => {
     try {
       if (state.settings) {
-        return !!state.settings.cognito.cognito.IDENTITY_POOL_ID
+        if (state.settings.aws && state.settings.aws.cognito && state.settings.aws.cognito.IDENTITY_POOL_ID && state.settings.aws.cognito.IDENTITY_POOL_ID !== '') {
+          return !!state.settings.aws.cognito.IDENTITY_POOL_ID
+        } else {
+          return !!state.settings.cognito.cognito.IDENTITY_POOL_ID
+        }
       }
     } catch (e) {
       return false

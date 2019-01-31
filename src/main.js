@@ -17,6 +17,8 @@ const fixConsoleLog = {
   }
 }
 
+window.plugin_loaded = 0
+
 Vue.use(Vuetify, {
   // theme: {
   //   primary: colors.indigo.base, // #E53935
@@ -87,15 +89,11 @@ Vue.config.productionTip = false
 const apolloProvider = new VueApollo({
   clients: {
     acentera: function() {
-      console.error('acentera client test ')
       return window.Apollo // store.$getters.ap
     }
   },
   defaultClient: function() {
     () => {
-      console.error('defualt client test here APOLLO')
-      console.error('defualt client test here APOLLO')
-      console.error('defualt client test here APOLLO')
     }
   }
 })
