@@ -1,6 +1,7 @@
 import { loginForgotPassword, userLoginUpdatePassword, registerFirstAdmin, registerByUsernameCode, loginByUsername, loginByUsernameThirdParty, registerDeviceCodeByUsernameThirdParty, logout, getUserInfo } from '@/api/login'
 import router from '@/router'
 import { Auth, Logger } from 'aws-amplify'
+import AWS from 'aws-sdk'
 
 // TODO: Move request into api/user file
 import request from '@/utils/request'
@@ -94,22 +95,63 @@ const user = {
     },
     SET_COGNITO_USER: (state, cognitoUser) => {
       if (state.cognito && (cognitoUser && !cognitoUser.cacheTokens)) {
+        state.cognito.cacheTokens()
+        /*
         if (state.cognito.cacheTokens) {
           state.cognito.cacheTokens()
         }
+        */
       }
       state.cognito = cognitoUser
       // setCognitoUserInfo(cognitoUser)
     },
     SET_CREDS: (state, creds) => {
       // https://github.com/awslabs/aws-mobile-appsync-sdk-js/issues/105
-
       if (creds === '') {
         // No creds
         state.credentials = null
       } else {
         state.credentials = creds
         // TODO: SET Apollo Client and infos
+
+        // console.error(state.credentials)
+        if (state.credentials.cognito && state.credentials.cognito.config) {
+          var cognitoRegion = state.credentials.cognito.config.region
+          var idCreds = state.credentials.webIdentityCredentials.params
+          var userPoolId = store.state.settings.cognito.cognito.USER_POOL_ID
+          var idpoolid = store.state.settings.cognito.cognito.IDENTITY_POOL_ID
+          var appClientId = store.state.settings.cognito.cognito.APP_CLIENT_ID
+
+          // POTENTIAL: Region needs to be set if not already set previously elsewhere.
+          AWS.config.region = cognitoRegion
+          AWS.config.credentials = new AWS.CognitoIdentityCredentials(idCreds)
+
+          Auth.configure({
+            region: cognitoRegion,
+            userPoolId: userPoolId,
+            identityPoolId: idpoolid,
+            userPoolWebClientId: appClientId
+          })
+          console.error({
+            region: cognitoRegion,
+            userPoolId: userPoolId,
+            identityPoolId: idpoolid,
+            userPoolWebClientId: appClientId
+          })
+          store.dispatch('REFRESH_COGNITO_USER')
+          /*
+          Auth.currentAuthenticatedUser().then((user) => {
+            console.error('COGNITO current user is')
+            console.error(user)
+            // if (user.Session) {
+            state.cognito = user
+            // } else {
+            //  state.cognito = null
+            //}
+            // console.error(user)
+          })
+          */
+        }
       }
     }
   },
@@ -160,6 +202,21 @@ const user = {
       } catch (err) {
         context.commit('auth/setAuthenticationError', err, { root: true })
       }
+    },
+    REFRESH_COGNITO_USER({ commit }) {
+      return new Promise((resolve, reject) => {
+        Auth.currentAuthenticatedUser({
+          bypassCache: true
+        }).then((curUser) => {
+          console.error(curUser)
+          commit('SET_COGNITO_USER', curUser)
+          resolve(curUser)
+        }).catch((ex) => {
+          // maybe not cognito authenticated ?
+          console.error(ex.stack)
+          resolve(ex)
+        })
+      })
     },
     GET_CREDENTIALS({ commit }) {
       return new Promise((resolve, reject) => {
@@ -613,6 +670,7 @@ const user = {
           commit('SET_ADMIN_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_ROLES_ACTIVE', [])
+          localStorage.clear() // Remove all Cognito tokens...
           removeToken()
           removeAdminToken()
           resolve()
@@ -631,6 +689,7 @@ const user = {
         commit('SET_ADMIN_TOKEN', '')
         commit('SET_ROLES', [])
         commit('SET_ROLES_ACTIVE', [])
+        localStorage.clear() // Remove all Cognito tokens...
         removeToken()
         removeAdminToken()
         resolve()

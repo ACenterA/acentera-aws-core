@@ -277,6 +277,31 @@ const settings = {
             }
           })
         }
+        /*
+        var cognitoRegion = config.cognito.REGION
+        // var idCreds = store.state.credentials.webIdentityCredentials.params
+        var userPoolId = config.cognito.USER_POOL_ID
+        var idpoolid =  config.cognito.IDENTITY_POOL_ID // store.state.settings.cognito.cognito.IDENTITY_POOL_ID
+        var appClientId = config.cognito.APP_CLIENT_ID // stotre.state.settings.cognito.cognito.APP_CLIENT_ID
+
+        //POTENTIAL: Region needs to be set if not already set previously elsewhere.
+        AWS.config.region = cognitoRegion
+        // AWS.config.credentials = new AWS.CognitoIdentityCredentials(idCreds)
+
+        Auth.configure({
+          region: cognitoRegion,
+          userPoolId: userPoolId,
+          identityPoolId: idpoolid,
+          userPoolWebClientId: appClientId
+        })
+        console.error('authc onfigure done')
+        console.error({
+          region: cognitoRegion,
+          userPoolId: userPoolId,
+          identityPoolId: idpoolid,
+          userPoolWebClientId: appClientId
+        })
+        */
       } catch (ex) {
         if (ex) {
           console.error(ex)

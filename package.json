@@ -36,7 +36,7 @@
     "url": "https://github.com/PanJiaChen/vue-element-admin/issues"
   },
   "dependencies": {
-    "amazon-cognito-identity-js": "^2.0.26",
+    "amazon-cognito-identity-js": "latest",
     "vue-apollo": "latest",
     "apollo-link-state": "latest",
     "apollo-cache-inmemory": "latest",

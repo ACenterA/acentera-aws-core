@@ -1,3 +1,6 @@
+import { Auth } from 'aws-amplify'
+import { AWS } from 'aws-sdk'
+
 const getters = {
   sidebar: state => state.app.sidebar,
   mainsidebar: state => state.app.mainsidebar,
@@ -26,6 +29,27 @@ const getters = {
   customclass: state => state.app.customClass,
   apollo: state => state.settings.apollo,
   graphql: state => state.settings.graphql,
+  Auth: state => {
+    if (state.credentials && state.credentials.cognito && state.credentials.cognito.config) {
+      var cognitoRegion = state.credentials.cognito.config.region
+      var idCreds = state.credentials.webIdentityCredentials.params
+      var userPoolId = state.settings.cognito.cognito.USER_POOL_ID
+      var idpoolid = state.settings.cognito.cognito.IDENTITY_POOL_ID
+      var appClientId = state.settings.cognito.cognito.APP_CLIENT_ID
+
+      // POTENTIAL: Region needs to be set if not already set previously elsewhere.
+      AWS.config.region = cognitoRegion
+      AWS.config.credentials = new AWS.CognitoIdentityCredentials(idCreds)
+
+      Auth.configure({
+        region: cognitoRegion,
+        userPoolId: userPoolId,
+        identityPoolId: idpoolid,
+        userPoolWebClientId: appClientId
+      })
+    }
+    return Auth
+  },
   isCognitoUser: state => {
     try {
       if (state.settings) {

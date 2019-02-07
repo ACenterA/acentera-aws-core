@@ -222,7 +222,7 @@ const permission = {
           var tmpPromise = new Promise((rl, reject) => {
             $.ajax({
               // url: tmpPluginUrl + '/manifest',
-              url: tmpPluginUrl + '/',
+              url: tmpPluginUrl + '/index.html',
               type: 'get',
               success: function(data) {
                 // var hasScripts = 0
