@@ -80,6 +80,8 @@ const user = {
       state.name = name
     },
     SET_AVATAR: (state, avatar) => {
+      console.error('SET AVATAR TO ')
+      console.error(avatar)
       state.avatar = avatar
     },
     SET_NEED_MFA: (state, dta) => {
@@ -310,35 +312,45 @@ const user = {
               if (response && response.data) {
                 Auth.currentCredentials().then(credentials => {
                   commit('SET_CREDS', Auth.essentialCredentials(credentials))
+                  store.dispatch('REFRESH_COGNITO_USER').then((emptyFct) => {
+                    const data = response.data
+                    commit('SET_TOKEN', data.token)
+
+                    // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+                    // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+
+                    if (data.status === 'NeedMFA' && data.code) {
+                      commit('SET_NEED_MFA', data)
+                      // NeedMFA
+                      needMFA = true
+                      cognitoUser.challengeName = 'SOFTWARE_TOKEN_MFA'
+                      // cognitoUser.signInUserSession = null
+                      commit('SET_COGNITO_USER', cognitoUser)
+                      window.app.$message({ message: window.app.$t('login.needMfa') + '', type: 'success' })
+                      resolve(!needMFA)
+                    } else {
+                      setToken(response.data.token)
+                      const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                      commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                      setTokenLastRefresh(newRefreshTime)
+                      store.dispatch('UserLoggedIn').then(userInfo => { // user_info
+                        store.dispatch('GetUserInfo').then(userInfo => { // user_info
+                          window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
+                          // cognitoUser.cacheTokens()
+                          // cognitoUser = null
+                          // commit('SET_COGNITO_USER', '')
+                          resolve(!needMFA)
+                        })
+                      })
+                    }
+                  })
+                }).catch(error => {
+                  console.error(error)
+                  resolve(!needMFA)
                 })
-
-                const data = response.data
-                commit('SET_TOKEN', data.token)
-
-                // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
-                // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-
-                if (data.status === 'NeedMFA' && data.code) {
-                  commit('SET_NEED_MFA', data)
-                  // NeedMFA
-                  needMFA = true
-                  cognitoUser.challengeName = 'SOFTWARE_TOKEN_MFA'
-                  // cognitoUser.signInUserSession = null
-                  commit('SET_COGNITO_USER', cognitoUser)
-                  window.app.$message({ message: window.app.$t('login.needMfa') + '', type: 'success' })
-                } else {
-                  window.app.$message({ message: window.app.$t('login.Successfully') + '', type: 'success' })
-                  // cognitoUser.cacheTokens()
-                  // cognitoUser = null
-                  // commit('SET_COGNITO_USER', '')
-
-                  setToken(response.data.token)
-                  const newRefreshTime = Math.round(new Date().getTime() / 1000)
-                  commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-                  setTokenLastRefresh(newRefreshTime)
-                }
+              } else {
+                resolve(!needMFA)
               }
-              resolve(!needMFA)
             }).catch(error => {
               if (error && error.response) {
                 if (error.response.status === 401) {
@@ -537,26 +549,38 @@ const user = {
                   const data = response.data
                   if (data.status === 'NeedMFA' && data.code) {
                     commit('SET_NEED_MFA', data)
+                    resolve()
                   } else {
                     commit('SET_TOKEN', data.token)
                     window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
 
                     Auth.currentCredentials().then(credentials => {
                       commit('SET_CREDS', Auth.essentialCredentials(credentials))
-                    })
 
-                    setToken(response.data.token)
-                    // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
-                    // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-                    // a.cacheTokens()
-                    // cognitoUser = null
-                    // commit('SET_COGNITO_USER', '')
-                    const newRefreshTime = Math.round(new Date().getTime() / 1000)
-                    commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
-                    setTokenLastRefresh(newRefreshTime)
+                      setToken(response.data.token)
+                      // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
+                      // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
+                      // a.cacheTokens()
+                      // cognitoUser = null
+                      // commit('SET_COGNITO_USER', '')
+                      const newRefreshTime = Math.round(new Date().getTime() / 1000)
+                      commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
+                      setTokenLastRefresh(newRefreshTime)
+
+                      store.dispatch('UserLoggedIn').then(userInfo => { // user_info
+                        store.dispatch('GetUserInfo').then(userInfo => { // user_info
+                          return resolve(cognitoUser)
+                        }).catch(error => {
+                          console.error(error)
+                          resolve(cognitoUser)
+                        })
+                      }).catch(error => {
+                        console.error(error)
+                        resolve(cognitoUser)
+                      })
+                    })
                   }
                 }
-                resolve()
               }).catch(error => {
                 if (error && error.response) {
                   if (error.response.status === 401) {
@@ -576,7 +600,7 @@ const user = {
             store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
               // All Good non cognito User
               window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-              resolve()
+              resolve(userInfo)
             }).catch((err) => {
               if (err && e) {
                 window.app.$message({ message: window.app.$t('login.' + e.code), type: 'error' })

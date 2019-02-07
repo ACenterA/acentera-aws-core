@@ -3,7 +3,7 @@ import { getSiteSettings } from '@/api/app.js'
 import { getToken, getTokenLastRefresh, refreshToken } from '@/utils/auth'
 import { getSettingsToken, setSettingsToken } from '@/utils/settings.js'
 import { getSiteConfiguration } from '@/api/app'
-import { Auth } from 'aws-amplify'
+// import { Auth } from 'aws-amplify'
 
 // import { ApolloLink } from 'apollo-link'
 // import { ApolloLink, concat, split } from 'apollo-link'
@@ -193,7 +193,7 @@ const settings = {
           region: state.graphql.REGION || state.graphql.region, // config.appsync.REGION,
           auth: {
             type: state.graphql.AUTH_TYPE || 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
-            credentials: () => Auth.currentCredentials()
+            credentials: () => store.getters.Auth.currentCredentials()
             // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
           },
           disableOffline: true

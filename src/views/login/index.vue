@@ -616,10 +616,27 @@ export default {
           self.codeConfirm.code = ''
           self.loading = false
         } else {
-          this.$router.push({ path: this.redirect || '/' })
+          // console.error('loading success ...')
+          // this.$router.push({ path: this.redirect || '/' })
           setTimeout(function() {
             self.loading = false
+            self.$router.push({ path: self.redirect || '/' })
           }, 2000)
+          // Reload
+          /*
+          store.dispatch('Ready').then(res => {
+            this.$router.push({ path: this.redirect || '/' })
+          })
+          */
+          // this.$router.push({ path: this.redirect || '/' })
+          /*
+          // This is bad but... retrigger routings ?
+          if (window.location.href.indexOf('?') >= 0) {
+            window.location.href=window.location.href + '&ts=' + new Date()
+          } else {
+            window.location.href=window.location.href + '?ts=' + new Date()
+          }
+          */
         }
       }).catch((erz) => {
         console.error(erz)
@@ -683,9 +700,12 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
+          this.$store.dispatch('LoginByUsername', this.loginForm).then((userInfo) => {
             this.resetForm()
-            this.$router.push({ path: this.redirect || '/' })
+            console.error(userInfo)
+            if (userInfo) {
+              this.$router.push({ path: this.redirect || '/' })
+            }
             this.loading = false
           }).catch(() => {
             this.loading = false

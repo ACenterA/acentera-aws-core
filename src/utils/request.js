@@ -230,16 +230,18 @@ const handleError = function(error, test) {
                 }).catch((err) => {
                   avoidDoubleRefresh = false
                   err['message'] = window.app.$t('error.SessionTimedout')
-                  store.dispatch('LogOut')
-                  router.push({ path: '/', replace: true, query: { noGoBack: false }})
-                  return reject(err)
+                  store.dispatch('LogOut').then((loggedOut) => {
+                    router.push({ path: '/', replace: true, query: { noGoBack: false }})
+                    return reject(err)
+                  })
                 })
               })
             } else {
               err['message'] = window.app.$t('error.SessionTimedout')
-              store.dispatch('LogOut')
-              router.push({ path: '/', replace: true, query: { noGoBack: false }})
-              return reject(err)
+              store.dispatch('LogOut').then((loggedOut) => {
+                router.push({ path: '/', replace: true, query: { noGoBack: false }})
+                return reject(err)
+              })
             }
           } catch (e) {
             if (e) {
@@ -247,10 +249,11 @@ const handleError = function(error, test) {
             }
           }
         } else {
-          store.dispatch('LogOut')
-          router.push({ path: '/', replace: true, query: { noGoBack: false }})
-          err['message'] = window.app.$t('error.SessionTimedout')
-          return reject(err)
+          store.dispatch('LogOut').then((loggedOut) => {
+            router.push({ path: '/', replace: true, query: { noGoBack: false }})
+            err['message'] = window.app.$t('error.SessionTimedout')
+            return reject(err)
+          })
           // store.dispatch('LogOut')
           // router.push({ path: '/', replace: true, query: { noGoBack: false }})
         }

@@ -401,6 +401,10 @@ const app = {
           resolve(ex)
         })
       })
+    },
+    UserLoggedIn({ commit }, data) {
+      var self = this
+      self.version = this.version
     }
     /*
     RouteChange({ commit, state }, input) {

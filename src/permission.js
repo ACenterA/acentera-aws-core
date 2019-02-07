@@ -22,6 +22,7 @@ const bootstrap = [
 ]
 */
 
+var logoutCompleted = false
 const whiteList = [
   '/login',
   '/bootstrap',
@@ -249,12 +250,23 @@ router.beforeEach((to, from, next) => {
                     }
                   })
 
-                  store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
-                    // store.commit('NPROGRESS_END')
-                    next()
-                    store.commit('NPROGRESS_END_DELAY')
-                    // store.commit('NPROGRESS_END_DELAY')
-                  })
+                  if (to.path.indexOf('/login') !== -1) {
+                    store.dispatch('LogOut').then(() => {
+                      store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                        // store.commit('NPROGRESS_END')
+                        next()
+                        store.commit('NPROGRESS_END_DELAY')
+                        // store.commit('NPROGRESS_END_DELAY')
+                      })
+                    })
+                  } else {
+                    store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
+                      // store.commit('NPROGRESS_END')
+                      next()
+                      store.commit('NPROGRESS_END_DELAY')
+                      // store.commit('NPROGRESS_END_DELAY')
+                    })
+                  }
                 } else {
                   store.dispatch('RouteChange').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
                     // store.commit('NPROGRESS_END')
@@ -266,8 +278,49 @@ router.beforeEach((to, from, next) => {
               } else {
                 console.error('loading of plugins ?')
                 // store.commit('NPROGRESS_END')
-                next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
-                store.commit('NPROGRESS_END')
+                console.error(store.getters.getCognitoUser)
+
+                console.error('test logout here ra? using ' + logoutCompleted)
+                /*
+                store.getters.Auth.currentSession().then((f) => {
+                  next(`/login?redirect=${to.path}`)
+                  store.commit('NPROGRESS_END')
+                }).catch((ex) => {
+                  console.error(ex)
+                  if (!logoutCompleted) {
+                */
+                /*
+                if (store.getters.isCognitoUser && (store.getters.needMFARegistration && store.getters.needMFARegistration != '') && (store.getters.needMFARegistrationStr && store.getters.needMFARegistrationStr == '')) {
+                  next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                  store.commit('NPROGRESS_END')
+                } else {
+                    console.error('is cogni :' + store.getters.isCognitoUser)
+                    console.error('is mfa? :' + store.getters.needMFARegistration)
+                    console.error('need mfa ? ' + store.getters.needMFARegistrationStr)
+
+                    store.dispatch('LogOut').then(() => {
+                      next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                      store.commit('NPROGRESS_END')
+                    })
+                }
+                */
+                console.error('GOT PATH AAAA')
+                store.dispatch('LogOut').then(() => {
+                  next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                  store.commit('NPROGRESS_END')
+                })
+                // next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                /*
+                if (!store.getters.getCognitoUser && store.getters.getCognitoUser !== '') {
+                  store.dispatch('LogOut').then(() => {
+                    next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                    store.commit('NPROGRESS_END')
+                  })
+                } else {
+                  next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                  store.commit('NPROGRESS_END')
+                }
+                */
                 // setTimeout(function() {
                 //  NProgress.done() // if current page is login will not trigger afterEach hook, so manually handle it
                 // }, 60)
