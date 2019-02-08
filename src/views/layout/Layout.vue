@@ -13,6 +13,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { Navbar, Sidebar, MainSidebar, AppMain, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 
@@ -27,6 +28,9 @@ export default {
   },
   mixins: [ResizeMixin],
   computed: {
+    ...mapGetters([
+      'isLoading'
+    ]),
     isInnerSide() {
       return this.$store.state.app.innerSidebar
     },

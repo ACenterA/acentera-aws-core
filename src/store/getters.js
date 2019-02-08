@@ -20,6 +20,7 @@ const getters = {
   available_roles: state => state.user.roles,
   setting: state => state.user.setting,
   permission_routers: state => state.permission.routers,
+  router_loaded: state => state.permission.loading,
   plugin_permission_routers: state => state.permission.plugin_routers,
   activePlugin: state => state.app.activePlugin,
   addRouters: state => state.permission.addRouters,

@@ -133,12 +133,6 @@ export const constantRouterMap = [
   */
 ]
 
-export default new Router({
-  mode: 'history', // require service support
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRouterMap
-})
-
 export const asyncTestRouterMapTemp = [
 ]
 window.asyncTestRouterMapTemp = asyncTestRouterMapTemp
@@ -384,3 +378,30 @@ export const asyncRouterMap = [
   */
   { path: '*', redirect: '/404', hidden: true }
 ]
+
+const createRouter = () => new Router({
+  mode: 'history',
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRouterMap
+  // routes: []
+})
+
+const router = createRouter()
+
+export function resetRouter() {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // the relevant part
+  return newRouter
+}
+
+/*
+export default new Router({
+  mode: 'history', // require service support
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRouterMap
+})
+*/
+
+window.ResetRouter = resetRouter
+
+export default router

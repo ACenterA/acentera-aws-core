@@ -53,6 +53,8 @@ router.beforeEach((to, from, next) => {
         if (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0)) {
           store.dispatch('NPROGRESS_START').then((res) => {
             store.dispatch('GenerateRoutes', { }).then(() => { // 根据roles权限生成可访问的路由表
+              console.error('ADD ROUTES 01')
+              console.error(store.getters.addRouters)
               router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
               next() // {  path: '/error/no_api_access_error', replace: true }) // hack方法 确保addRoutes已完成 ,set the replace: true so the navigation will not leave a history record
               store.commit('NPROGRESS_END_DELAY')
@@ -81,8 +83,14 @@ router.beforeEach((to, from, next) => {
                   //  NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
                   // }, 60)
                 } else {
+                  if (!(store.getters.roles.length === 0 && (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0)))) { // 判断当前用户是否已拉取完user_info信息
+                    if (from.path.indexOf('/login') >= 0) {
+                      window.app.$store.dispatch('RefreshAllRoutes') // .then((re) => {
+                    }
+                  }
                   if (store.getters.roles.length === 0 && (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0))) { // 判断当前用户是否已拉取完user_info信息
                     store.dispatch('GetSiteConfiguration').then(res => { // get site configuration since we have logged in successfully
+                      console.error('GET USER INFO HERE AAAAAAA')
                       store.dispatch('GetUserInfo').then(res => { // user_info
                         if (!store.getters || !store.getters.addRouters || (store.getters.addRouters && store.getters.addRouters.length <= 0)) {
                           const roles = []
@@ -91,9 +99,16 @@ router.beforeEach((to, from, next) => {
                             roles.push(res.data.roles[z].toLowerCase())
                           }
 
+                          console.error('ON IN HEREE LOADING ROUTE FA3 ')
+                          if (from.path.indexOf('/login') >= 0) {
+                            window.app.$store.dispatch('RefreshAllRoutes') // .then((re) => {
+                          }
+
                           if (to.path.startsWith('/plugins/')) {
                             store.dispatch('LoadPlugins', { roles }).then((hasPlugins) => {
                               store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                                console.error('ADD ROUTES 02')
+                                console.error(store.getters.addRouters)
                                 router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
                                 store.dispatch('Ready').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....]
                                   fixLoop++
@@ -115,6 +130,8 @@ router.beforeEach((to, from, next) => {
                             })
                           } else {
                             store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                              console.error('ADD ROUTES 03')
+                              console.error(store.getters.addRouters)
                               router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
                               store.dispatch('LoadPlugins', { roles }).then((hasPlugins) => {
                                 store.dispatch('Ready').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....
@@ -231,6 +248,8 @@ router.beforeEach((to, from, next) => {
                               console.error('a5')
                               store.dispatch('GenerateRoutes', { }).then(() => { // 根据roles权限生成可访问的路由表
                                 console.error('a6')
+                                console.error('ADD ROUTES 04')
+                                console.error(store.getters.addRouters)
                                 router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
                                 store.dispatch('Ready').then(res => { // Tell plugins all plugins loaded, user logged in and ready.....]
                                   fixLoop++

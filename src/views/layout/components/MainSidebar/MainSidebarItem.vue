@@ -1,5 +1,5 @@
 <template>
-  <div v-if="(!item.innerMenu && !item.hidden&&item.children) || !item.hidden&&item.iscomponent" class="menu-wrapper">
+  <div v-if="((!item.innerMenu && !item.hidden&&item.children) || !item.hidden&&item.iscomponent)" class="menu-wrapper">
 
     <template v-if="item.iscomponent === true">
       <a href="javascript:void(0)" style="cursor: default;">
@@ -8,7 +8,6 @@
         </keep-alive>
       </a>
     </template>
-    tesT: : {{ item }}
     <template v-if="item.flatChildrens || hasOneShowingChild(item.children) && !onlyOneChild.children&&!item.alwaysShow">
       <a :href="onlyOneChild.path" target="_blank" @click="clickLink(onlyOneChild.path,$event)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
@@ -16,7 +15,6 @@
         </el-menu-item>
       </a>
     </template>
-
     <el-submenu v-if="!(item.iscomponent === true) && !(item.flatChildrens || hasOneShowingChild(item.children) && !onlyOneChild.children&&!item.alwaysShow)" :index="item.name||item.path">
       <template slot="title">
         <item v-if="item.meta" :icon="item.meta.icon" :title="generateTitle(item.meta.title)" />
@@ -41,6 +39,7 @@ import path from 'path'
 import { generateTitle } from '@/utils/i18n'
 import { validateURL } from '@/utils/validate'
 import Item from './Item'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'SidebarItem',
@@ -64,6 +63,11 @@ export default {
     return {
       onlyOneChild: null
     }
+  },
+  computed: {
+    ...mapGetters([
+      'isLoading'
+    ])
   },
   methods: {
     hasOneShowingChild(children) {

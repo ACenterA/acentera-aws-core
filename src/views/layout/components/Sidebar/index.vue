@@ -4,6 +4,7 @@
     <br>
     <el-scrollbar :hidden="isHidden" wrap-class="scrollbar-wrapper" class="custom-wrapper">
       <el-menu
+        v-if="router_loaded"
         :hidden="isHidden"
         :show-timeout="200"
         :default-active="$route.path"
@@ -15,6 +16,18 @@
         active-text-color="#409EFF">
         <inner-sidebar-item v-for="route in getPluginSideMenu" :key="route.name" :item="route" :base-path="route.path"/>
       </el-menu>
+      <el-menu
+        v-else
+        :hidden="isHidden"
+        :show-timeout="200"
+        :default-active="$route.path"
+        :collapse="isCollapse"
+        mode="vertical"
+        background-color="#ffffff"
+        class="el-menu-vertical-demo"
+        text-color="#000000"
+        active-text-color="#409EFF"
+      />
     </el-scrollbar>
   </div>
 </template>
@@ -32,7 +45,8 @@ export default {
   data() {
     return {
       tempActive: true,
-      lastActivePlugin: 'none'
+      lastActivePlugin: 'none',
+      lastActivePluginCtr: 0
     }
   },
   computed: {
@@ -42,6 +56,8 @@ export default {
       'isLoading',
       'activePlugin',
       'mainsidebar',
+      'router_loaded',
+      'isLoading',
       'device'
     ]),
     isMainActive() {
@@ -55,23 +71,50 @@ export default {
     },
     getPluginSideMenu() {
       // if (this.isLoading)
-      console.error('did it change here ?' + this.activePlugin)
-      // if (this.lastActivePlugin !== this.activePlugin) {
-      // this.lastActivePlugin = this.activePlugin
-      console.error('test a333a')
-      console.error('GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
-      console.error(this.plugin_permission_routers[this.activePlugin])
-      if (this.plugin_permission_routers[this.activePlugin]) {
-        console.error('OK HERE DIDSPACH SHOW?')
-        console.error('test a333bbb')
-        this.$store.dispatch('showInnerSidebarForce')
-        return this.plugin_permission_routers[this.activePlugin]
+      // console.error('did it change here ?' + this.activePlugin)
+      var canContinue = true
+      /*
+      if (this.lastActivePlugin !== this.activePlugin) {
+        this.lastActivePlugin = this.activePlugin
+        this.lastActivePluginCtr = 0
       } else {
-        console.error('OK HERE DIDSPACH HIDE?')
-        console.error('test a333ccc')
-        this.$store.dispatch('hideInnerSidebarForce')
+        this.lastActivePluginCtr++
+        if (this.lastActivePluginCtr >= 2) {
+          this.lastActivePlugin = 'none'
+          canContinue = false
+        }
       }
-      // }
+      */
+      if (canContinue) {
+        console.error('test a333a')
+        console.error('GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
+        console.error(this.plugin_permission_routers[this.activePlugin])
+        if (this.plugin_permission_routers[this.activePlugin]) {
+          console.error('OK HERE DIDSPACH SHOW?')
+          console.error('test a333bbb')
+          // this.$store.dispatch('showInnerSidebarForce') // this make infinite loop ?
+          return this.plugin_permission_routers[this.activePlugin]
+        } else {
+          console.error('OK HERE DIDSPACH HIDE?')
+          console.error('test a333ccc')
+          // this.$store.dispatch('hideInnerSidebarForce')
+        }
+      }
+    }
+  },
+  mounted() {
+    console.error('mounted test a333a')
+    console.error('mounted GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
+    console.error(this.plugin_permission_routers[this.activePlugin])
+    if (this.plugin_permission_routers[this.activePlugin]) {
+      console.error('OK HERE DIDSPACH SHOW?')
+      console.error('test a333bbb')
+      this.$store.dispatch('showInnerSidebarForce') // this make infinite loop ?
+      return this.plugin_permission_routers[this.activePlugin]
+    } else {
+      console.error('OK HERE DIDSPACH HIDE?')
+      console.error('test a333ccc')
+      this.$store.dispatch('hideInnerSidebarForce')
     }
   },
   methods: {

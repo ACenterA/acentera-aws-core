@@ -5,6 +5,7 @@ const webpack = require('webpack')
 const config = require('../config')
 const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
+const CompressionPlugin = require("compression-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
@@ -92,6 +93,7 @@ const webpackConfig = merge(baseWebpackConfig, {
     // keep module.id stable when vender modules does not change
     new webpack.HashedModuleIdsPlugin(),
     // copy custom static assets
+    // new CompressionPlugin(),
     new CopyWebpackPlugin([
       {
         from: path.resolve(__dirname, '../static'),
@@ -107,7 +109,9 @@ const webpackConfig = merge(baseWebpackConfig, {
         libs: {
           name: 'chunk-libs',
           test: /[\\/]node_modules[\\/]/,
-          priority: 10,
+          priority: -10,
+          maxSize: 1300000,
+	  reuseExistingChunk: true,
           chunks: 'initial' // 只打包初始时依赖的第三方
         },
         elementUI: {

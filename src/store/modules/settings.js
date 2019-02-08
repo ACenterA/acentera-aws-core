@@ -187,13 +187,27 @@ const settings = {
             }
           }
         })
-
         const appSyncLink = createAppSyncLink({
           url: state.graphql.URL || state.graphql.url,
           region: state.graphql.REGION || state.graphql.region, // config.appsync.REGION,
           auth: {
             type: state.graphql.AUTH_TYPE || 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
-            credentials: () => store.getters.Auth.currentCredentials()
+            credentials: () => new Promise((resolve, reject) => {
+              var fctTmp = function(i) {
+                if (i >= 30) {
+                  return resolve(store.getters.Auth.currentCredentials())
+                }
+                if (store.getters.credentials && store.getters.credentials !== '') {
+                  return resolve(store.getters.credentials)
+                } else {
+                  setTimeout(function() {
+                    fctTmp(i + 1)
+                  }, 300)
+                }
+              }
+              fctTmp(1)
+              // store.getters.credentials // store.getters.Auth.currentCredentials()
+            })
             // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
           },
           disableOffline: true

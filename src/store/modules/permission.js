@@ -21,25 +21,54 @@ function hasPermission(roles, route) {
  * @param asyncRouterMap
  * @param roles
  */
-function filterAsyncRouter(asyncRouterMap, roles) {
-  const accessedRouters = asyncRouterMap.filter(route => {
-    if (hasPermission(roles, route)) {
-      if (route.children && route.children.length) {
-        route.children = filterAsyncRouter(route.children, roles)
+function filterAsyncRouter(aasyncRouterMap, roles) {
+  console.error('received of')
+  console.error(aasyncRouterMap)
+  if (Object.prototype.toString.call(aasyncRouterMap) === '[object Array]') {
+    const accessedRouters = aasyncRouterMap.filter(route => {
+      console.error('route is ....')
+      console.error(route.id)
+      console.error(route)
+      if (hasPermission(roles, route)) {
+        console.error('got perm')
+        console.error('ok does it has children ?')
+        console.error(route.id)
+        console.error(route)
+
+        if (route.children_orig) {
+          route.children = route.children_orig
+        }
+        route.children_orig = route.children
+
+        if (route.children && route.children.length) {
+          console.error('ok nice route.children proceed...')
+          // Backup the children orig in case of logging user reload of menu this is a bad hack / fix
+          route.children = filterAsyncRouter(route.children, roles)
+        }
+        return true
+      } else {
+        console.error('no perm')
       }
-      return true
-    }
-    return false
-  })
-  return accessedRouters
+      return false
+    })
+    console.error('returning of ')
+    console.error(accessedRouters)
+    return accessedRouters
+  } else {
+    return []
+  }
 }
 
 const permission = {
   state: {
     routers: constantRouterMap,
     plugin_routers: {},
+    loading: true,
     addRouters: [],
     addPlugins: [],
+    addPluginsWithoutRoles: [],
+    addPluginsInnerWithoutRoles: [],
+    origViews: [],
     replacedViews: {}
   },
   getters: {
@@ -48,6 +77,10 @@ const permission = {
     }
   },
   mutations: {
+    SET_SETTINGS_LOADING: (state, val) => {
+      state.loading = true // val
+      state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
+    },
     SET_ROUTERS: (state, routers) => {
       state.addRouters = routers
       state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
@@ -59,6 +92,12 @@ const permission = {
       state.addPlugins = state.addPlugins.concat(routers)
       state.routers = constantRouterMap.concat(state.addPlugins).concat(state.addRouters)
     },
+    RESET_PLUGINS: (state, routers) => {
+      state.addPlugins.length = 0
+      state.addRouters.length = 0
+      state.routers.length = 0
+      state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
+    },
     SET_REPLACED_VIEW: (state, obj) => {
       var path = obj.route.path
       if (obj.route.children) {
@@ -68,32 +107,131 @@ const permission = {
       }
       console.error('adding replace view of ' + obj.path + ' to ' + path)
       state.replacedViews[obj.path] = path
+    },
+    ADD_PLUGINS_WITHOUT_ROLES: (state, routers) => {
+      state.addPluginsWithoutRoles = state.addPluginsWithoutRoles.concat(routers)
+    },
+    ADD_PLUGINS_INNER_MENU_WITHOUT_ROLES: (state, routers) => {
+      state.addPluginsInnerWithoutRoles = state.addPluginsInnerWithoutRoles.concat(routers)
+    },
+    ADD_ORIG: (state, routers) => {
+      state.origViews = state.origViews.concat(routers)
     }
   },
   actions: {
+    RefreshAllRoutes({ commit, state }, data) {
+      commit('RESET_PLUGINS')
+      commit('SET_SETTINGS_LOADING', false)
+      window.asyncTestRouterMapTemp = window.asyncTestRouterMapTemp.concat(state.origViews).concat([])
+      state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
+      console.error('crurent roles are')
+      console.error(window.app.$store.getters.roles)
+      window.app.$store.dispatch('ActivatePlugins', window.app.$store.getters.roles).then((res) => {
+        console.error('set loaded of aaa')
+
+        var aR = window.ResetRouter()
+        window.app.$router.marcher = aR.matcher
+        console.error('adding ofroutes test..')
+        console.error(res)
+        console.error('vs')
+        console.error(window.app.$store.state.permission.routers)
+        window.app.$router.addRoutes(window.app.$store.state.permission.routers)
+
+        // addRouters
+        /* setTimeout(function() {
+          commit('SET_SETTINGS_LOADING', true)
+          console.error('set loaded of aaa ok ')
+          const roles = window.app.$store.getters.roles
+          var tmpRouters = window.app.$store.state.permission.routers
+          if (roles)
+            var accessedRoutersTmp = filterAsyncRouter(tmpRouters, roles)
+            // var tmpRoutes = accessedRouters.concat(accessedRoutersTmp)
+            router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
+          }
+          */
+
+        // }, 200)
+        return res
+      })
+    },
+    RefreshRoutes({ commit, state }, data) {
+      return new Promise((resolve, reject) => {
+        const roles = data || window.app.$store.getters.roles
+        const asyncTestRouterMap = state.addPluginsWithoutRoles
+        console.error(state)
+        console.error(asyncTestRouterMap)
+        const innerMenusHash = state.addPluginsInnerWithoutRoles
+
+        const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
+        commit('ADD_PLUGINS', accessedRoutersTmp)
+        for (var w in innerMenusHash) {
+          // Filter async router Test ... do we need ??
+          const accessedInnerRoutersTmp = filterAsyncRouter(innerMenusHash[w], roles)
+          commit('ADD_INNER_PLUGINS', { plugin: w, routes: accessedInnerRoutersTmp })
+        }
+
+        if (accessedRoutersTmp) {
+          console.error('adding routes of ')
+          console.error(accessedRoutersTmp)
+          window.app.$router.addRoutes(accessedRoutersTmp)
+        }
+        console.error('resolving with ')
+        console.error(accessedRoutersTmp)
+        // window.plugin_loaded--;
+        resolve(accessedRoutersTmp)
+      })
+    },
     ActivatePlugins({ commit, state }, data) {
       const roles = data || window.app.$store.getters.roles
+      console.error('roles are.... ')
+      console.error(roles)
       return new Promise((resolve, reject) => {
         const asyncTestRouterMap = []
         var replaceUrls = {}
         const innerMenusHash = {}
         /* eslint-disable */
         if (window.asyncTestRouterMapTemp.length >= 1) {
+          console.error('1 - test save before adding? in array list')
+          if (!window.app.$store.state.app.ready) {
+            // window.asyncTestRouterMapTemp
+            console.error('save before adding? in array list?')
+            commit('ADD_ORIG', window.asyncTestRouterMapTemp)
+          }
+          console.error('2 - test save before adding? in array list')
+
           try {
             for (var input = null; input = window.asyncTestRouterMapTemp.shift(); input !== undefined ) {
               /* eslint-enable */
               // if ((input.path || '').startsWith('/api/plugins/') || (input.path || '').startsWith('/')) {
-              if (input['iscomponent'] === true) {
-                input['component'] = input['component']
+              // Fix for loggedin user and show proper menu's
+              /*
+              if (input['component_orig']) {
+                input['component'] = input['component_orig']
               } else {
-                if (!input['layout']) {
-                  input['component'] = Layout
+                input['component_orig'] = input['component']
+              }
+              */
+              if (input['component_orig'] || input['component_orig'] === true) {
+                console.error('sikipping')
+              } else {
+                if (!input['component']) {
+                  input['component_orig'] = true
                 } else {
-                  if (input['layout'] === 'default' || input['layout'] === 'Layout') {
+                  input['component_orig'] = input['component']
+                }
+                if (input['iscomponent'] === true) {
+                  input['component'] = input['component']
+                } else {
+                  if (!input['layout']) {
                     input['component'] = Layout
+                  } else {
+                    if (input['layout'] === 'default' || input['layout'] === 'Layout') {
+                      input['component'] = Layout
+                    }
                   }
                 }
               }
+
               console.error('processing of ... ' + input['path'] + 'with ' + input['replacePath'])
               if (input['replacePrecedence'] && input['replacePath']) {
                 var replacePath = input['replacePath']
@@ -136,13 +274,29 @@ const permission = {
           }
 
           try {
+            // commit('ADD_PLUGINS_WITHOUT_ROLES', asyncTestRouterMap)
+            // commit('ADD_PLUGINS_INNER_MENU_WITHOUT_ROLES', innerMenusHash)
+            console.error('OK AA')
+            console.error(asyncTestRouterMap)
+
+            // const roles = data || window.app.$store.getters.roles
+            // const asyncTestRouterMap = state.addPluginsWithoutRoles
+            // console.error(state)
+            // console.error(asyncTestRouterMap)
+            // const innerMenusHash = state.addPluginsInnerWithoutRoles
+
             const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
+            console.error('OK ADD PLUGINS OF ')
+            console.error(accessedRoutersTmp)
             commit('ADD_PLUGINS', accessedRoutersTmp)
             for (var w in innerMenusHash) {
               // Filter async router Test ... do we need ??
               const accessedInnerRoutersTmp = filterAsyncRouter(innerMenusHash[w], roles)
+              console.error('adding inner plugin of ')
+              console.error(accessedInnerRoutersTmp)
               commit('ADD_INNER_PLUGINS', { plugin: w, routes: accessedInnerRoutersTmp })
             }
+
             if (accessedRoutersTmp) {
               console.error('adding routes of ')
               console.error(accessedRoutersTmp)
@@ -151,7 +305,12 @@ const permission = {
             console.error('resolving with ')
             console.error(accessedRoutersTmp)
             // window.plugin_loaded--;
+            store.dispatch('ActivatePluginsLoaded')
             resolve(accessedRoutersTmp)
+
+            // window.app.$store.dispatch('RefreshRoutes', roles).then((res) => {
+            //  resolve(res)
+            // })
           } catch (ezz) {
             console.error(ezz)
           }
@@ -219,6 +378,7 @@ const permission = {
           }
           var tmpPluginUrl = basePlugin + v + '/static'
           var tmpPluginWithoutUrl = basePluginWithout
+          store.dispatch('AddPlugin', v)
           var tmpPromise = new Promise((rl, reject) => {
             $.ajax({
               // url: tmpPluginUrl + '/manifest',
@@ -286,7 +446,6 @@ const permission = {
       return new Promise(resolve => {
         const { roles } = data
         let accessedRouters
-
         if (roles) {
           if (roles.indexOf('admin') >= 0) {
             accessedRouters = asyncRouterMap
@@ -296,7 +455,14 @@ const permission = {
         } else {
           accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
         }
-        commit('SET_ROUTERS', accessedRouters)
+        /*
+        var tmpRouters = window.app.$store.state.permission.routers
+        var accessedRoutersTmp = filterAsyncRouter(tmpRouters, roles)
+        var tmpRoutes = accessedRouters.concat(accessedRoutersTmp)
+        // router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
+        */
+        commit('SET_ROUTERS', accessedRouters) // accessedRouters)
+        // router.addRoutes(store.getters.addRouters) // 动态添加可访问路由表
         resolve()
       })
     }

@@ -13,11 +13,13 @@ const app = {
       visible: true,
       withoutAnimation: false
     },
+    ready: false,
     customClass: '',
     activePlugin: '',
     innerSidebar: false,
     nbiteration: 0,
     nprogress: 0,
+    plugin: 0,
     device: 'desktop',
     version: '0.1',
     accountid: '',
@@ -39,6 +41,21 @@ const app = {
     }
   },
   mutations: {
+    SET_READY: (state, val) => {
+      state.ready = val
+    },
+    ADD_PLUGIN: (state, val) => {
+      state.plugin = state.plugin + 1
+    },
+    // TODO Change this to Plugin Loaded X
+    REMOVE_PLUGIN: (state, val) => {
+      state.plugin = state.plugin - 1
+      console.error('removed plugin of ...')
+      console.error(state.plugin)
+      if (state.plugin === 0) {
+        state.ready = true
+      }
+    },
     SET_ACTIVE_PLUGIN: (state, val) => {
       state.activePlugin = val
     },
@@ -402,9 +419,22 @@ const app = {
         })
       })
     },
+    AddPlugin({ commit }, data) {
+      console.error('adding plugin', data)
+      commit('ADD_PLUGIN', 1)
+    },
+    ActivatePluginsLoaded({ commit }, data) {
+      commit('REMOVE_PLUGIN', 1)
+    },
     UserLoggedIn({ commit }, data) {
-      var self = this
-      self.version = this.version
+      //  var self = this
+      /*
+      return new Promise((resolve, reject) => {
+        window.app.$store.dispatch('RefreshAllRoutes').then((re) => {
+          resolve(re)
+        })
+      })
+      */
     }
     /*
     RouteChange({ commit, state }, input) {
