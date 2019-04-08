@@ -1,4 +1,4 @@
-## AWS SAR ECS / EKS 
+## AWS ACenterA Core
 
 This is a Vue.JS serverless app starter kit that help you launch your next Serverless project. It is integrated with many AWS Services such as : DynamoDB / Cognito / GraphQL / S3. 
 
