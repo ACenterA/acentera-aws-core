@@ -6,8 +6,6 @@ This app contains multiple AWS resources, including Cognito and enforcing MFA.
 
 ## Installation Instructions
 
-For a step-by-step walkthrough of using this app with AWS CodePipeline, see [this tutorial](https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials-serverlessrepo-auto-publish.html).
-
 1 - Find the application
 
   # For ACenterA Prod Core you need to acknowledge it will create IAM Roles or Resource policies.
