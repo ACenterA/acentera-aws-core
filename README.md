@@ -8,7 +8,8 @@ This app contains multiple AWS resources, including Cognito and enforcing MFA.
 
 1 - Find the application
 
-  # For ACenterA Prod Core you need to acknowledge it will create IAM Roles or Resource policies.
+  For ACenterA Prod Core you need to acknowledge it will create IAM Roles or Resource policies.
+
   [Serverless Repository](https://console.aws.amazon.com/serverlessrepo/home?region=us-east-1#/available-applications)
 
   [Serverless Create App direct link](https://console.aws.amazon.com/lambda/home?region=us-east-1#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:356769441913:applications/acentera-prod-core)
