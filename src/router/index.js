@@ -137,6 +137,10 @@ export const asyncTestRouterMapTemp = [
 ]
 window.asyncTestRouterMapTemp = asyncTestRouterMapTemp
 
+export const asyncTestRouterMapBootstrapTemp = [
+]
+window.asyncTestRouterMapBootstrapTemp = asyncTestRouterMapBootstrapTemp
+
 // admin is always added to all routes (see the async filtering... in store/module/permissions.js
 export const asyncRouterMap = [
   /*

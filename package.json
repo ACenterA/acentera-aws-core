@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "build:prod": "cross-env NODE_ENV=production env_config=prod node build/build.js",
-    "embed": "go-bindata-assetfs -o bindata.go -pkg static dist/...",
-    "binary": "go-bindata-assetfs -o bindata.go -pkg static dist/...",
+    "embed": "go-bindata -o bindata.go -pkg static dist/...",
+    "binary": "go-bindata -o bindata.go -pkg static dist/...",
     "build:sit": "cross-env NODE_ENV=production env_config=sit node build/build.js",
     "lint": "eslint --ext .js,.vue src",
     "lint-fix": "lint-staged",

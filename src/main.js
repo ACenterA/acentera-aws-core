@@ -18,6 +18,7 @@ const fixConsoleLog = {
 }
 
 window.plugin_loaded = 0
+window.plugin_loaded_max_iter = 40
 
 Vue.use(Vuetify, {
   // theme: {

@@ -1,6 +1,7 @@
 import { asyncRouterMap, constantRouterMap } from '@/router'
 import Layout from '@/views/layout/Layout'
 import store from '@/store'
+import router from '@/router'
 import $ from 'jquery'
 
 /**
@@ -182,6 +183,8 @@ const permission = {
       })
     },
     ActivatePlugins({ commit, state }, data) {
+      console.error('ACT GO DATA')
+      console.error(data)
       const roles = data || window.app.$store.getters.roles
       console.error('roles are.... ')
       console.error(roles)
@@ -190,6 +193,10 @@ const permission = {
         var replaceUrls = {}
         const innerMenusHash = {}
         /* eslint-disable */
+        console.error('CORE: ACTIVATING')
+        console.error(data)
+        console.error('ok but lodaed?')
+        console.error(window.plugin_loaded)
         if (window.asyncTestRouterMapTemp.length >= 1) {
           console.error('1 - test save before adding? in array list')
           if (!window.app.$store.state.app.ready) {
@@ -323,12 +330,13 @@ const permission = {
     LoadPlugins({ commit }, data) {
       console.error('loading using data')
       console.error(data)
-      var self = this
+      // var self = this
       var objToAdd = []
       var last = 0
       var nFct = function(i, ress, reject) {
         try {
           var nbElem = objToAdd.length
+          console.error('CORE: Adding Plugin')
           if (i < nbElem) {
             var js = objToAdd[i]
             if (!js.src) {
@@ -355,10 +363,65 @@ const permission = {
               document.body.appendChild(tmp)
             }
           } else {
+            console.error('OK LOADING PLUGIN HERE A')
+            // var self = this
+            var fctTmpLoad = function(itrL) {
+              itrL++
+              console.error('in loading? still?')
+              console.error(window.plugin_loaded)
+              if (window.plugin_loaded_max_iter-- >= 0) {
+                console.error('in loading? still? here iter')
+                if (window.plugin_loaded < 0) {
+                  setTimeout(function() {
+                    console.error('waiting for plugin latecy load..')
+                    fctTmpLoad(itrL++)
+                    /*
+                    store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                      resolve()
+                    })
+                    */
+                  }, 100)
+                  // wait until all loaded..
+                  return
+                } else {
+                  console.error('in loading? still? loaded more than 0 ?')
+                  if (window.plugin_loaded === 0 || window.plugin_loaded >= 2) {
+                    window.plugin_loaded++
+                    setTimeout(function() {
+                      fctTmpLoad(itrL++)
+                      /*
+                      console.error('waiting for plugin latecy load..')
+                      store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                        resolve()
+                      })
+                      */
+                    }, 150)
+                    return
+                  }
+                }
+              } else {
+                console.error('CORE: GOT PLUGIN LOAD TIMEOUT')
+              }
+              console.error('OK LOADING PLUGIN HERE B DONE')
+              console.error('in on completed here')
+              console.error('ACTIVATING of ')
+              store.dispatch('ActivatePlugins', data).then(function(completedLoad) {
+                console.error('CORE: Activate Plugin')
+                console.error(window.plugin_loaded)
+                ress(true)
+              })
+            }
+            fctTmpLoad(0)
+            /*
+            window.plugin_loaded--;
             self.dispatch('ActivatePlugins', data).then(function(completedLoad) {
-              console.error('all loaded?')
-              ress(true)
+              console.error('CORE: Activate Plugin')
+              console.error(window.plugin_loaded)
+              setTimeout(function() {
+                ress(true)
+              }, 100)
             })
+            */
           }
         } catch (z) {
           console.error(z)
@@ -444,16 +507,56 @@ const permission = {
     },
     GenerateRoutes({ commit }, data) {
       return new Promise(resolve => {
-        const { roles } = data
         let accessedRouters
-        if (roles) {
-          if (roles.indexOf('admin') >= 0) {
-            accessedRouters = asyncRouterMap
+        const { roles } = data
+        /*
+        console.error('in loading? still?')
+        console.error(window.plugin_loaded)
+        var self = this
+        if (window.plugin_loaded_max_iter-- >= 0) {
+          console.error('in loading? still? here iter')
+          if (window.plugin_loaded < 0) {
+            setTimeout(function() {
+              console.error('waiting for plugin latecy load..')
+              store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                resolve()
+              })
+            }, 100)
+            // wait until all loaded..
+            return
           } else {
-            accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
+            console.error('in loading? still? loaded more than 0 ?')
+            if (window.plugin_loaded == 0 || window.plugin_loaded >= 2) {
+              window.plugin_loaded++
+              setTimeout(function() {
+                console.error('waiting for plugin latecy load..')
+                store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
+                  resolve()
+                })
+              }, 150)
+            }
+            return
           }
         } else {
-          accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
+          console.error('CORE: GOT PLUGIN LOAD TIMEOUT')
+        }
+        console.error('in on completed here')
+        console.error('adding of ')
+        */
+        console.error('CORE: GENERATE ROUTES HERE')
+        console.error(window.asyncTestRouterMapBootstrapTemp)
+        console.error(window.asyncTestRouterMapBootstrapTemp.length)
+        router.addRoutes(window.asyncTestRouterMapBootstrapTemp)
+        var asyncRouterMapTmp = window.asyncTestRouterMapBootstrapTemp.concat(asyncRouterMap).concat([])
+
+        if (roles) {
+          if (roles.indexOf('admin') >= 0) {
+            accessedRouters = asyncRouterMapTmp
+          } else {
+            accessedRouters = filterAsyncRouter(asyncRouterMapTmp, roles)
+          }
+        } else {
+          accessedRouters = filterAsyncRouter(asyncRouterMapTmp, roles)
         }
         /*
         var tmpRouters = window.app.$store.state.permission.routers
