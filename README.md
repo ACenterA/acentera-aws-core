@@ -21,6 +21,8 @@ This app contains multiple AWS resources, including Cognito and enforcing MFA.
   ![02 - Serverless App Install](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/02_ACENTERA_CORE_DEPLOY.png)
 
 3 - Find Values in the Stack Output
+ 
+  [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active)
 
   Find the AWS Account Id (AccountIdD)
 
