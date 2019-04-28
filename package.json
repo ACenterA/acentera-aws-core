@@ -68,7 +68,6 @@
     "screenfull": "3.3.3",
     "select.js": "^1.0.3",
     "showdown": "1.8.6",
-    "simplemde": "1.11.2",
     "sortablejs": "1.7.0",
     "underscore": "^1.9.1",
     "vue": "2.5.17",
@@ -138,7 +137,7 @@
     "webpack": "latest",
     "webpack-bundle-analyzer": "2.13.1",
     "webpack-cli": "3.1.0",
-    "webpack-dev-server": "3.1.5",
+    "webpack-dev-server": ">=3.1.11",
     "webpack-merge": "4.1.4"
   },
   "engines": {
