@@ -1,209 +1,68 @@
+## AWS ACenterA Core
 
-go-bindata -o ../gofaas/static/main.go -pkg static dist/...
+This is a Vue.JS serverless app starter kit that help you launch your next Serverless project. It is integrated with many AWS Services such as : DynamoDB / Cognito / GraphQL / S3. 
+
+This app contains multiple AWS resources, including Cognito and enforcing MFA.
+
+## Installation Instructions
+
+1 - Find the application
+
+  For ACenterA Prod Core you need to acknowledge it will create IAM Roles or Resource policies.
+
+  [Serverless Repository](https://console.aws.amazon.com/serverlessrepo/home?region=us-east-1#/available-applications)
+
+  [Serverless Create App direct link](https://console.aws.amazon.com/lambda/home?region=us-east-1#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:356769441913:applications/acentera-prod-core)
+
+  ![01 - Serverless App Core](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/01_ACENTERA_CORE_PROD.png)
+
+2 - Add a valid phone number (required for MFA) including area code
+
+  ![02 - Serverless App Install](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/02_ACENTERA_CORE_DEPLOY.png)
+
+3 - Find Values in the Stack Output
+ 
+  [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active)
+
+  Find the AWS Account Id (AccountIdD)
+
+  Find the CloudFront URL (WebsiteUrl)
+
+  Navigate to the CloudFront URL you will be asking to proceed with the initialization
+
+4 - App Initialization
+
+  Enter the AccountId to confirm ownership.
+
+  ![04 - Serverless App Configuration](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/04_ACENTERA_BOOTSTRAP.png)
+
+5 - App Admin Account and Secrets
+
+  Accept the licence and term of services, and follow the instructions to create a temporary password.
+
+  ![05 - Serverless App Configuration](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/05_ACENTERA_BOOTSTRAP_CONFIRM.png)
+
+6 - App Admin Account and login.
+
+  Enter the temporary password, you will need to sign-in using MFA.
+
+  ![07 - Serverless App Admin account](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/07_ACENTERA_LOGIN.png)
+ 
+  Use your phone to register an MFA Device using Google Authenticator
+
+  ![11 - Serverless App MFA Software](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/11_ACENTERA_REGISTER_RSOFTWARETOKEN.png)
+
+7 - You should be successfully logged in to the application
+  ![13 - Serverless App Success Login](https://github.com/ACenterA/acentera-aws-core/raw/master/docs/images/13_ACENTERA_LOGGED_IN.png)
 
 
-<p align="center">
-  <img width="320" src="https://wpimg.wallstcn.com/ecc53a42-d79b-42e2-8852-5126b810a4c8.svg">
-</p>
+Contact support, and ask for a premium access to allow embedding this app into a SAM template using [nested apps](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessapplication).
 
-<p align="center">
-  <a href="https://github.com/vuejs/vue">
-    <img src="https://img.shields.io/badge/vue-2.5.17-brightgreen.svg" alt="vue">
-  </a>
-  <a href="https://github.com/ElemeFE/element">
-    <img src="https://img.shields.io/badge/element--ui-2.4.6-brightgreen.svg" alt="element-ui">
-  </a>
-  <a href="https://travis-ci.org/PanJiaChen/vue-element-admin" rel="nofollow">
-    <img src="https://travis-ci.org/PanJiaChen/vue-element-admin.svg?branch=master" alt="Build Status">
-  </a>
-  <a href="https://github.com/PanJiaChen/vue-element-admin/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/mashape/apistatus.svg" alt="license">
-  </a>
-  <a href="https://github.com/PanJiaChen/vue-element-admin/releases">
-    <img src="https://img.shields.io/github/release/PanJiaChen/vue-element-admin.svg" alt="GitHub release">
-  </a>
-  <a href="https://gitter.im/vue-element-admin/discuss">
-    <img src="https://badges.gitter.im/Join%20Chat.svg" alt="gitter">
-  </a>
-  <a href="https://panjiachen.github.io/vue-element-admin-site/donate">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
-  </a>
-</p>
+## App Outputs
 
-English | [简体中文](./README.zh-CN.md)
+1. `AccountId` - Your aws Account Id.
+1. `WebsiteUrl` - Your aws cloudfront https entrypoint.
 
-## Introduction
+## License Summary
 
-[vue-element-admin](http://panjiachen.github.io/vue-element-admin) is a front-end management background integration solution. It based on [vue](https://github.com/vuejs/vue) and use the UI Toolkit [element](https://github.com/ElemeFE/element).
-
-It is a magical vue admin based on the newest development stack of vue, built-in i18n solution, typical templates for enterprise applications, lots of awesome features. It helps you build a large complex Single-Page Applications. I believe whatever your needs are, this project will help you.
-
-- [Preview](http://panjiachen.github.io/vue-element-admin)
-
-- [Documentation](https://panjiachen.github.io/vue-element-admin-site/)
-
-- [Gitter](https://gitter.im/vue-element-admin/discuss)
-
-- [Wiki](https://github.com/PanJiaChen/vue-element-admin/wiki)
-
-- [Donate](https://panjiachen.github.io/vue-element-admin-site/donate/)
-
-- [Gitee](https://panjiachen.gitee.io/vue-element-admin/) 国内用户可访问该地址在线预览
-
-**This project is positioned as a background integration solution and is not suitable for secondary development as a basic template.**
-
-- Base template recommends using: [vue-admin-template](https://github.com/PanJiaChen/vue-admin-template)
-- Desktop: [electron-vue-admin](https://github.com/PanJiaChen/electron-vue-admin)
-- Typescript: [vue-typescript-admin-template](https://github.com/Armour/vue-typescript-admin-template) (Credits: [@Armour](https://github.com/Armour))
-
-**This project does not support low version browsers (e.g. IE). Please add polyfill yourself if you need them.**
-
-**Note: This project uses element-ui@2.3.0+ version, so the minimum compatible vue@2.5.0+**
-
-**Start using `webpack4` from `v3.8.0`. If you still want to continue using `webpack3`, please use this branch [webpack3](https://github.com/PanJiaChen/vue-element-admin/tree/webpack3)**
-
-## Preparation
-
-You need to install [node](http://nodejs.org/) and [git](https://git-scm.com/) locally. The project is based on [ES2015+](http://es6.ruanyifeng.com/), [vue](https://cn.vuejs.org/index.html), [vuex](https://vuex.vuejs.org/zh-cn/), [vue-router](https://router.vuejs.org/zh-cn/), [axios](https://github.com/axios/axios) and [element-ui](https://github.com/ElemeFE/element), all request data is simulated using [Mock.js](https://github.com/nuysoft/Mock).
-Understanding and learning this knowledge in advance will greatly help the use of this project.
-
----
-
- <p align="center">
-  <img width="900" src="https://wpimg.wallstcn.com/a5894c1b-f6af-456e-82df-1151da0839bf.png">
-</p>
-
-## Features
-
-```
-- Login / Logout
-
-- Permission Authentication
-  - Page permission
-  - Directive permission
-  - Two-step login
-
-- Multi-environment build
-  - dev sit stage prod
-
-- Global Features
-  - I18n
-  - Multiple dynamic themes
-  - Dynamic sidebar (supports multi-level routing)
-  - Dynamic breadcrumb
-  - Tags-view(Tab page Support right-click operation)
-  - Svg Sprite
-  - Mock data
-  - Screenfull
-  - Responsive Sidebar
-
-- Editor
-  - Rich Text Editor
-  - Markdown Editor
-  - JSON Editor
-
-- Excel
-  - Export Excel
-  - Export zip
-  - Upload Excel
-  - Visualization Excel
-
-- Table
-  - Dynamic Table
-  - Drag And Drop Table
-  - Tree Table
-  - Inline Edit Table
-
-- Error Page
-  - 401
-  - 404
-
-- Components
-  - Avatar Upload
-  - Back To Top
-  - Drag Dialog
-  - Drag Kanban
-  - Drag List
-  - SplitPane
-  - Dropzone
-  - Sticky
-  - CountTo
-
-- Advanced Example
-- Error Log
-- Dashboard
-- Guide Page
-- ECharts
-- Clipboard
-- Markdown to html
-```
-
-## Getting started
-
-```bash
-# clone the project
-git clone https://github.com/PanJiaChen/vue-element-admin.git
-
-# install dependency
-npm install
-
-# develop
-npm run dev
-```
-
-This will automatically open http://localhost:9527.
-
-## Build
-
-```bash
-# build for test environment
-npm run build:sit
-
-# build for production environment
-npm run build:prod
-```
-
-## Advanced
-
-```bash
-# --report to build with bundle size analytics
-npm run build:prod --report
-
-# --generate a bundle size analytics. default: bundle-report.html
-npm run build:prod --generate_report
-
-# --preview to start a server in local to preview
-npm run build:prod --preview
-
-# lint code
-npm run lint
-
-# auto fix
-npm run lint -- --fix
-```
-
-Refer to [Documentation](https://panjiachen.github.io/vue-element-admin-site/guide/essentials/deploy.html) for more information
-
-## Changelog
-
-Detailed changes for each release are documented in the [release notes](https://github.com/PanJiaChen/vue-element-admin/releases).
-
-## Online Demo
-
-[Preview](http://panjiachen.github.io/vue-element-admin)
-
-## Donate
-
-If you find this project useful, you can buy author a glass of juice :tropical_drink:
-
-![donate](https://wpimg.wallstcn.com/bd273f0d-83a0-4ef2-92e1-9ac8ed3746b9.png)
-
-[Paypal Me](https://www.paypal.me/panfree23)
-
-[Buy me a coffee](https://www.buymeacoffee.com/Pan)
-
-## License
-
-[MIT](https://github.com/PanJiaChen/vue-element-admin/blob/master/LICENSE)
-
-Copyright (c) 2017-present PanJiaChen
+This code is made available under the Apache license. See the LICENSE file.
