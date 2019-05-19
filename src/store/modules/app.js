@@ -1,6 +1,8 @@
 import Cookies from 'js-cookie'
 import { validateAccountId, performAppInitialization } from '@/api/app'
 
+const staticAccountId = process.env.DEV_ACCOUNTID || ''
+
 const app = {
   state: {
     sidebar: {
@@ -37,7 +39,11 @@ const app = {
       return state.nprogress > 0
     },
     isAccountIdSet(state) {
-      return state.accountid > 0
+      if (staticAccountId !== '' && process.env.ENV_CONFIG !== 'prod') {
+        return '' + state.accountid === '' + staticAccountId
+      } else {
+        return state.accountid > 0
+      }
     }
   },
   mutations: {
@@ -50,8 +56,6 @@ const app = {
     // TODO Change this to Plugin Loaded X
     REMOVE_PLUGIN: (state, val) => {
       state.plugin = state.plugin - 1
-      console.error('removed plugin of ...')
-      console.error(state.plugin)
       if (state.plugin === 0) {
         state.ready = true
       }
@@ -383,19 +387,18 @@ const app = {
           // This returns the list of plugins
           if (response && response.data) {
             commit('SET_ACCOUNT_ID', response.data.accountid)
-            return resolve(true)
+            return resolve(response.data)
           } else {
-            return resolve(false)
+            return resolve(null)
           }
         }).catch((ex) => {
           console.error(ex)
-          resolve(ex)
+          resolve(null)
         })
       })
     },
     PerformAppInitialization({ commit }, data) {
       // Lets validate if thet accountid match and if website has not been initialized yet ...
-      console.error(this.state)
       data['accountid'] = this.state.app.accountid
       var self = this
 
@@ -404,7 +407,7 @@ const app = {
         performAppInitialization(data).then(response => {
           // This returns the list of plugins
           if (response && response.data) {
-            commit('SET_ACCOUNT_ID', null)
+            // commit('SET_ACCOUNT_ID', null)
             commit('SET_LOADING', false)
             window.preventLoop = false // ?? Hack see in settings ....
             self.dispatch('GetSiteSettings').then(res => { // Required for firstTime loging notification in login page and other plugins infos?
@@ -414,13 +417,11 @@ const app = {
             return resolve(false)
           }
         }).catch((ex) => {
-          console.error(ex)
           resolve(ex)
         })
       })
     },
     AddPlugin({ commit }, data) {
-      console.error('adding plugin', data)
       commit('ADD_PLUGIN', 1)
     },
     ActivatePluginsLoaded({ commit }, data) {

@@ -80,8 +80,6 @@ const user = {
       state.name = name
     },
     SET_AVATAR: (state, avatar) => {
-      console.error('SET AVATAR TO ')
-      console.error(avatar)
       state.avatar = avatar
     },
     SET_NEED_MFA: (state, dta) => {
@@ -134,12 +132,14 @@ const user = {
             identityPoolId: idpoolid,
             userPoolWebClientId: appClientId
           })
+          /*
           console.error({
             region: cognitoRegion,
             userPoolId: userPoolId,
             identityPoolId: idpoolid,
             userPoolWebClientId: appClientId
           })
+          */
           store.dispatch('REFRESH_COGNITO_USER')
           /*
           Auth.currentAuthenticatedUser().then((user) => {
@@ -210,7 +210,6 @@ const user = {
         Auth.currentAuthenticatedUser({
           bypassCache: true
         }).then((curUser) => {
-          console.error(curUser)
           commit('SET_COGNITO_USER', curUser)
           resolve(curUser)
         }).catch((ex) => {
@@ -522,8 +521,10 @@ const user = {
             const newRefreshTime = Math.round(new Date().getTime() / 1000)
             commit('SET_LAST_TOKEN_REFRESH', newRefreshTime)
             setTokenLastRefresh(newRefreshTime)
+            resolve()
+          } else {
+            resolve()
           }
-          resolve()
         }).catch((err) => {
           reject(err)
         })
@@ -611,11 +612,12 @@ const user = {
         })
       } else {
         return new Promise((resolve, reject) => {
-          store.dispatch('LoginByUsernameWebapp', userInfo).then(() => {
+          store.dispatch('LoginByUsernameWebapp', userInfo).then((r) => {
             // All Good
             window.app.$message({ message: window.app.$t('login.Successfully'), type: 'success' })
-            resolve()
+            resolve(r)
           }).catch(error => {
+            console.error(error)
             if (!error || !error.response) {
               Message({
                 message: window.app.$t('error.ServerTimeout') + '',

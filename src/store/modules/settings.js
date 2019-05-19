@@ -3,19 +3,17 @@ import { getSiteSettings } from '@/api/app.js'
 import { getToken, getTokenLastRefresh, refreshToken } from '@/utils/auth'
 import { getSettingsToken, setSettingsToken } from '@/utils/settings.js'
 import { getSiteConfiguration } from '@/api/app'
-// import { Auth } from 'aws-amplify'
+import { Auth } from 'aws-amplify'
 
-// import { ApolloLink } from 'apollo-link'
-// import { ApolloLink, concat, split } from 'apollo-link'
+import { Credentials } from '@aws-amplify/core'
+import {
+  CognitoAccessToken,
+  CognitoIdToken,
+  CognitoRefreshToken
+} from 'amazon-cognito-identity-js'
 import { ApolloLink } from 'apollo-link'
 import { setContext } from 'apollo-link-context'
-// import { InMemoryCache } from 'apollo-cache-inmemory'
-// import { HttpLink } from 'apollo-link-http'
-
-// import AWSAppSyncClient, { createLinkWithCache, createAppSyncLink } from 'aws-appsync'
-// import AWSAppSyncClient, { createAppSyncLink, createLinkWithCache } from 'aws-appsync'
 import AWSAppSyncClient, { createAppSyncLink } from 'aws-appsync'
-// import { withClientState } from 'apollo-link-state'
 
 const settings = {
   state: {
@@ -93,6 +91,12 @@ const settings = {
     },
     SET_GRAPHQL: (state, graphql) => {
       state.graphql = graphql || state.graphql
+      if (!(state.graphql && (state.graphql.url || state.graphql.URL))) {
+        if (state.graphql && (state.graphql.LOCAL === 'true')) {
+          // WE ARE LOCAL
+          state.graphql.URL = process.env.GRAPHQL_LOCAL_URL
+        }
+      }
       if (state.graphql && (state.graphql.url || state.graphql.URL)) {
         // This is the same cache you pass into new ApolloClient
         // const cache = new InMemoryCache()
@@ -187,30 +191,47 @@ const settings = {
             }
           }
         })
+
+        // let graphqlHeaders = async() => null
         const appSyncLink = createAppSyncLink({
-          url: state.graphql.URL || state.graphql.url,
-          region: state.graphql.REGION || state.graphql.region, // config.appsync.REGION,
+          url: state.graphql.URL || state.graphql.url || process.env.GRAPHQL_LOCAL_URL,
+          region: state.graphql.REGION || state.graphql.region || 'us-east-1', // config.appsync.REGION,
+          disableOffline: true,
           auth: {
-            type: state.graphql.AUTH_TYPE || 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
+            type: state.graphql.AUTH_TYPE || 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
             credentials: () => new Promise((resolve, reject) => {
-              var fctTmp = function(i) {
-                if (i >= 30) {
-                  return resolve(store.getters.Auth.currentCredentials())
+              if (process.env.ENV_CONFIG === 'local') {
+                // let graphqlHeaders = async() => ({ 'cognito-identity-id': 'abc-xyz-123' })
+                Credentials.get = () => Promise.resolve('pizza')
+                Auth.currentUserInfo = () => Promise.resolve({
+                  attributes: { email: 'local-dev@example.com' }
+                })
+                Auth.currentSession = () => Promise.resolve({
+                  getAccessToken: () => new CognitoAccessToken({ AccessToken: 'testAccessToken' }),
+                  getIdToken: () => new CognitoIdToken({ IdToken: 'testIdToken' }),
+                  getRefreshToken: () => new CognitoRefreshToken({ RefreshToken: 'testRefreshToken' }),
+                  isValid: () => true
+                })
+                return resolve(Auth.currentCredentials())
+              } else {
+                var fctTmp = function(i) {
+                  if (i >= 30) {
+                    return resolve(store.getters.Auth.currentCredentials())
+                  }
+                  if (store.getters.credentials && store.getters.credentials !== '') {
+                    return resolve(store.getters.credentials)
+                  } else {
+                    setTimeout(function() {
+                      fctTmp(i + 1)
+                    }, 300)
+                  }
                 }
-                if (store.getters.credentials && store.getters.credentials !== '') {
-                  return resolve(store.getters.credentials)
-                } else {
-                  setTimeout(function() {
-                    fctTmp(i + 1)
-                  }, 300)
-                }
+                fctTmp(1)
               }
-              fctTmp(1)
               // store.getters.credentials // store.getters.Auth.currentCredentials()
             })
             // type: 'AMAZON_COGNITO_USER_POOLS', // 'AWS_IAM', // AUTH_TYPE.AWS_IAM,
-          },
-          disableOffline: true
+          }
         },
         {
           defaultOptions: {
@@ -240,17 +261,12 @@ const settings = {
         // window.app.$apollo.client = appsyncProvider.provide()
         // this.$apollo =
         // Vue.Use(appsyncProvider.provide())
-        // console.error(window.Apollo)
       }
     },
     SET_COGNITO: (state, cognito) => {
       try {
-        console.error('set cognito to ...')
-        console.error(cognito)
         state.aws = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
         state.cognito = cognito || state.cognito || { s3: {}, apiGateway: {}, cognito: {}}
-        console.error('set cognito to ...')
-        console.error(cognito)
         if (!state.cognito.s3) {
           state.cognito.s3 = {}
         }
@@ -264,9 +280,21 @@ const settings = {
         }
 
         const config = state.cognito
-        console.error('now set amplify to')
-        console.error(config)
         if (config.cognito) {
+          // LOCAL
+          var graphqlHeaders = async() => ({ 'cognito-identity-id': 'abc-xyz-123' })
+          if (config.cognito.LOCAL && ('' + config.cognito.LOCAL) === 'true') {
+            Credentials.get = () => Promise.resolve('pizza')
+            Auth.currentUserInfo = () => Promise.resolve({
+              attributes: { email: 'local-dev@example.com' }
+            })
+            Auth.currentSession = () => Promise.resolve({
+              getAccessToken: () => new CognitoAccessToken({ AccessToken: 'testAccessToken' }),
+              getIdToken: () => new CognitoIdToken({ IdToken: 'testIdToken' }),
+              getRefreshToken: () => new CognitoRefreshToken({ RefreshToken: 'testRefreshToken' }),
+              isValid: () => true
+            })
+          }
           window.Amplify.configure({
             Auth: {
               mandatorySignIn: true,
@@ -284,6 +312,7 @@ const settings = {
               endpoints: [
                 {
                   name: 'admin',
+                  graphql_headers: graphqlHeaders,
                   endpoint: config.apiGateway.URL,
                   region: config.apiGateway.REGION
                 }
@@ -341,10 +370,19 @@ const settings = {
       // commit('SET_PLUGINS', data.plugins)
       commit('SET_MFA', data.mfaEnabled)
       commit('SET_COGNITO', data.aws || data.Aws || data.cognito || data.Cognito) // somehow its uppercase?
-      if (data.aws && data.aws.graphql) {
-        commit('SET_GRAPHQL', data.aws.graphql || data.graphql || data.Graphql) // somehow its uppercase?
+      const cognitoTmp = data.aws || data.Aws || data.cognito || data.Cognito
+      if (cognitoTmp.cognito.LOCAL && ('' + cognitoTmp.cognito.LOCAL === 'true')) {
+        const graphQlLocal = {
+          URL: process.env.GRAPHQL_LOCAL_URL,
+          LOCAL: 'true'
+        }
+        commit('SET_GRAPHQL', graphQlLocal)
       } else {
-        commit('SET_GRAPHQL', data.graphql || data.Graphql) // somehow its uppercase?
+        if (data.aws && data.aws.graphql) {
+          commit('SET_GRAPHQL', data.aws.graphql || data.graphql || data.Graphql) // somehow its uppercase?
+        } else {
+          commit('SET_GRAPHQL', data.graphql || data.Graphql) // somehow its uppercase?
+        }
       }
       setSettingsToken(data)
     },
@@ -362,7 +400,6 @@ const settings = {
           }
           resolve(true)
         }).catch((ex) => {
-          console.error(ex)
           resolve(ex)
         })
       })
@@ -387,7 +424,6 @@ const settings = {
             if (response && response.data) { // 由于mockjs 不支持自定义状态码只能这样hack
               // Save app Settings ...
               const data = response.data
-              console.error('updadtting site setting data using ...')
               store.dispatch('UpdateSiteSettings', { data }).then(() => { // 根据roles权限生成可访问的路由表
                 if (!hasResolved) {
                   hasResolved = true

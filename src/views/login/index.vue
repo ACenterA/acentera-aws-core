@@ -565,12 +565,25 @@ export default {
       }
       var self = this
       this.$store.dispatch('ValidateAccountIdSetup', postData).then((resp) => {
-        if (resp === true) {
-          console.error('gott it')
+        if (resp) {
+          console.error('Got validate')
           self.resetForm()
+          console.error(resp)
           console.error('set path to ')
-          self.$router.push({ path: '/bootstrap' })
-          console.error('set path to  nice')
+          var routerNextPath = {
+            path: '/bootstrap'
+          }
+          const resolved = self.$router.resolve('/bootstrap/index')
+          if (resolved.route.name) {
+            if (resp.plugin_bootstrap) {
+              routerNextPath = {
+                path: '/bootstrap/index'
+              }
+            }
+          }
+          console.error('set path to')
+          console.error(routerNextPath)
+          self.$router.push(routerNextPath)
           setTimeout(function() {
             self.loading = false
           }, 2000)
@@ -702,10 +715,11 @@ export default {
           this.loading = true
           this.$store.dispatch('LoginByUsername', this.loginForm).then((userInfo) => {
             this.resetForm()
-            console.error(userInfo)
-            if (userInfo) {
-              this.$router.push({ path: this.redirect || '/' })
-            }
+            // all good if its successfull we receive an resolve else reject?
+            // console.error(userInfo)
+            // if (userInfo) {
+            this.$router.push({ path: this.redirect || '/' })
+            // }
             this.loading = false
           }).catch(() => {
             this.loading = false

@@ -176,9 +176,19 @@ export default {
     }
   },
   created() {
-    const resolved = this.$router.resolve('/bootstrap/index')
-    if (resolved.route.name) {
-      this.$router.push({ path: '/bootstrap/index' })
+    var usePluginRoute = false
+    if (this.$store && this.$store.getters && this.$store.getters.settings) {
+      if (this.$store.getters.settings.missingSiteEntry === true) {
+        usePluginRoute = false
+      } else {
+        usePluginRoute = true
+      }
+    }
+    if (usePluginRoute === true) {
+      const resolved = this.$router.resolve('/bootstrap/index')
+      if (resolved.route.name) {
+        this.$router.push({ path: '/bootstrap/index' })
+      }
     }
     this.textInfo = window.app.$t('setupSite.textinfo')
   },

@@ -4,6 +4,8 @@ import store from '@/store'
 import router from '@/router'
 import $ from 'jquery'
 
+const plugin_url = process.env.BASE_PLUGIN_URL || ''
+
 /**
  * 通过meta.role判断是否与当前用户权限匹配
  * @param roles
@@ -23,37 +25,22 @@ function hasPermission(roles, route) {
  * @param roles
  */
 function filterAsyncRouter(aasyncRouterMap, roles) {
-  console.error('received of')
-  console.error(aasyncRouterMap)
   if (Object.prototype.toString.call(aasyncRouterMap) === '[object Array]') {
     const accessedRouters = aasyncRouterMap.filter(route => {
-      console.error('route is ....')
-      console.error(route.id)
-      console.error(route)
       if (hasPermission(roles, route)) {
-        console.error('got perm')
-        console.error('ok does it has children ?')
-        console.error(route.id)
-        console.error(route)
-
         if (route.children_orig) {
           route.children = route.children_orig
         }
         route.children_orig = route.children
 
         if (route.children && route.children.length) {
-          console.error('ok nice route.children proceed...')
           // Backup the children orig in case of logging user reload of menu this is a bad hack / fix
           route.children = filterAsyncRouter(route.children, roles)
         }
         return true
-      } else {
-        console.error('no perm')
       }
       return false
     })
-    console.error('returning of ')
-    console.error(accessedRouters)
     return accessedRouters
   } else {
     return []
@@ -106,7 +93,7 @@ const permission = {
           path = path + '/' + obj.route.children[0].path
         }
       }
-      console.error('adding replace view of ' + obj.path + ' to ' + path)
+      // console.error('adding replace view of ' + obj.path + ' to ' + path)
       state.replacedViews[obj.path] = path
     },
     ADD_PLUGINS_WITHOUT_ROLES: (state, routers) => {
@@ -125,17 +112,9 @@ const permission = {
       commit('SET_SETTINGS_LOADING', false)
       window.asyncTestRouterMapTemp = window.asyncTestRouterMapTemp.concat(state.origViews).concat([])
       state.routers = constantRouterMap.concat(state.addRouters).concat(state.addPlugins)
-      console.error('crurent roles are')
-      console.error(window.app.$store.getters.roles)
       window.app.$store.dispatch('ActivatePlugins', window.app.$store.getters.roles).then((res) => {
-        console.error('set loaded of aaa')
-
         var aR = window.ResetRouter()
         window.app.$router.marcher = aR.matcher
-        console.error('adding ofroutes test..')
-        console.error(res)
-        console.error('vs')
-        console.error(window.app.$store.state.permission.routers)
         window.app.$router.addRoutes(window.app.$store.state.permission.routers)
 
         // addRouters
@@ -159,8 +138,6 @@ const permission = {
       return new Promise((resolve, reject) => {
         const roles = data || window.app.$store.getters.roles
         const asyncTestRouterMap = state.addPluginsWithoutRoles
-        console.error(state)
-        console.error(asyncTestRouterMap)
         const innerMenusHash = state.addPluginsInnerWithoutRoles
 
         const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
@@ -172,40 +149,25 @@ const permission = {
         }
 
         if (accessedRoutersTmp) {
-          console.error('adding routes of ')
-          console.error(accessedRoutersTmp)
           window.app.$router.addRoutes(accessedRoutersTmp)
         }
-        console.error('resolving with ')
-        console.error(accessedRoutersTmp)
-        // window.plugin_loaded--;
+        // window.plugin_loaded--
         resolve(accessedRoutersTmp)
       })
     },
     ActivatePlugins({ commit, state }, data) {
-      console.error('ACT GO DATA')
-      console.error(data)
       const roles = data || window.app.$store.getters.roles
-      console.error('roles are.... ')
-      console.error(roles)
       return new Promise((resolve, reject) => {
         const asyncTestRouterMap = []
         var replaceUrls = {}
         const innerMenusHash = {}
         /* eslint-disable */
-        console.error('CORE: ACTIVATING')
-        console.error(data)
-        console.error('ok but lodaed?')
-        console.error(window.plugin_loaded)
+        // console.error('CORE: ACTIVATING')
         if (window.asyncTestRouterMapTemp.length >= 1) {
-          console.error('1 - test save before adding? in array list')
           if (!window.app.$store.state.app.ready) {
             // window.asyncTestRouterMapTemp
-            console.error('save before adding? in array list?')
             commit('ADD_ORIG', window.asyncTestRouterMapTemp)
           }
-          console.error('2 - test save before adding? in array list')
-
           try {
             for (var input = null; input = window.asyncTestRouterMapTemp.shift(); input !== undefined ) {
               /* eslint-enable */
@@ -218,9 +180,7 @@ const permission = {
                 input['component_orig'] = input['component']
               }
               */
-              if (input['component_orig'] || input['component_orig'] === true) {
-                console.error('sikipping')
-              } else {
+              if (!(input['component_orig'] || input['component_orig'] === true)) {
                 if (!input['component']) {
                   input['component_orig'] = true
                 } else {
@@ -239,7 +199,6 @@ const permission = {
                 }
               }
 
-              console.error('processing of ... ' + input['path'] + 'with ' + input['replacePath'])
               if (input['replacePrecedence'] && input['replacePath']) {
                 var replacePath = input['replacePath']
                 var replacePrecedence = input['replacePrecedence']
@@ -256,8 +215,6 @@ const permission = {
                   }
                 }
               }
-              console.error('replace url is')
-              console.error(replaceUrls)
 
               if (input['innerMenu']) {
                 if (!innerMenusHash['innerMenu']) {
@@ -272,7 +229,6 @@ const permission = {
             console.error(ez)
           }
           try {
-            console.error('will check fi set replace view SET_REPLACED_VIEW')
             for (var k in replaceUrls) {
               commit('SET_REPLACED_VIEW', { path: k, route: replaceUrls[k].route })
             }
@@ -283,35 +239,25 @@ const permission = {
           try {
             // commit('ADD_PLUGINS_WITHOUT_ROLES', asyncTestRouterMap)
             // commit('ADD_PLUGINS_INNER_MENU_WITHOUT_ROLES', innerMenusHash)
-            console.error('OK AA')
-            console.error(asyncTestRouterMap)
-
             // const roles = data || window.app.$store.getters.roles
             // const asyncTestRouterMap = state.addPluginsWithoutRoles
             // console.error(state)
             // console.error(asyncTestRouterMap)
             // const innerMenusHash = state.addPluginsInnerWithoutRoles
-
             const accessedRoutersTmp = filterAsyncRouter(asyncTestRouterMap, roles)
-            console.error('OK ADD PLUGINS OF ')
-            console.error(accessedRoutersTmp)
             commit('ADD_PLUGINS', accessedRoutersTmp)
             for (var w in innerMenusHash) {
               // Filter async router Test ... do we need ??
               const accessedInnerRoutersTmp = filterAsyncRouter(innerMenusHash[w], roles)
-              console.error('adding inner plugin of ')
               console.error(accessedInnerRoutersTmp)
               commit('ADD_INNER_PLUGINS', { plugin: w, routes: accessedInnerRoutersTmp })
             }
 
             if (accessedRoutersTmp) {
-              console.error('adding routes of ')
               console.error(accessedRoutersTmp)
               window.app.$router.addRoutes(accessedRoutersTmp)
             }
-            console.error('resolving with ')
-            console.error(accessedRoutersTmp)
-            // window.plugin_loaded--;
+            // window.plugin_loaded--
             store.dispatch('ActivatePluginsLoaded')
             resolve(accessedRoutersTmp)
 
@@ -322,21 +268,19 @@ const permission = {
             console.error(ezz)
           }
         } else {
-          // window.plugin_loaded--;
+          // window.plugin_loaded--
           resolve([])
         }
       })
     },
     LoadPlugins({ commit }, data) {
-      console.error('loading using data')
-      console.error(data)
       // var self = this
       var objToAdd = []
       var last = 0
       var nFct = function(i, ress, reject) {
         try {
           var nbElem = objToAdd.length
-          console.error('CORE: Adding Plugin')
+          // console.error('CORE: Adding Plugin')
           if (i < nbElem) {
             var js = objToAdd[i]
             if (!js.src) {
@@ -363,17 +307,12 @@ const permission = {
               document.body.appendChild(tmp)
             }
           } else {
-            console.error('OK LOADING PLUGIN HERE A')
             // var self = this
             var fctTmpLoad = function(itrL) {
               itrL++
-              console.error('in loading? still?')
-              console.error(window.plugin_loaded)
               if (window.plugin_loaded_max_iter-- >= 0) {
-                console.error('in loading? still? here iter')
                 if (window.plugin_loaded < 0) {
                   setTimeout(function() {
-                    console.error('waiting for plugin latecy load..')
                     fctTmpLoad(itrL++)
                     /*
                     store.dispatch('GenerateRoutes', { roles }).then(() => { // 根据roles权限生成可访问的路由表
@@ -384,7 +323,6 @@ const permission = {
                   // wait until all loaded..
                   return
                 } else {
-                  console.error('in loading? still? loaded more than 0 ?')
                   if (window.plugin_loaded === 0 || window.plugin_loaded >= 2) {
                     window.plugin_loaded++
                     setTimeout(function() {
@@ -399,21 +337,24 @@ const permission = {
                     return
                   }
                 }
-              } else {
+              }
+              /* else {
                 console.error('CORE: GOT PLUGIN LOAD TIMEOUT')
               }
+
               console.error('OK LOADING PLUGIN HERE B DONE')
               console.error('in on completed here')
               console.error('ACTIVATING of ')
+              */
               store.dispatch('ActivatePlugins', data).then(function(completedLoad) {
-                console.error('CORE: Activate Plugin')
-                console.error(window.plugin_loaded)
+                // console.error('CORE: Activate Plugin')
+                // console.error(window.plugin_loaded)
                 ress(true)
               })
             }
             fctTmpLoad(0)
             /*
-            window.plugin_loaded--;
+            window.plugin_loaded--
             self.dispatch('ActivatePlugins', data).then(function(completedLoad) {
               console.error('CORE: Activate Plugin')
               console.error(window.plugin_loaded)
@@ -433,11 +374,18 @@ const permission = {
         for (var v in store.getters.settings.plugins) {
           var basePlugin = '/api/plugins/'
           var basePluginWithout = ''
-          if (window.location.href.indexOf('http://localhost') === 0) {
-            // On localhost for development we need to use a custom forwarder
-            // This allow local development of a plugin
-            basePlugin = 'http://localhost:9528' + basePlugin
-            basePluginWithout = 'http://localhost:9528' + basePluginWithout
+          if (plugin_url === '') {
+            basePluginWithout = ''
+          } else {
+            if (window.location.href.indexOf('http://localhost') === 0) {
+              // On localhost for development we need to use a custom forwarder
+              // This allow local development of a plugin
+              basePlugin = 'http://localhost:9528' + basePlugin
+              basePluginWithout = 'http://localhost:9528' + basePluginWithout
+            } else {
+              basePlugin = plugin_url + basePlugin
+              basePluginWithout = plugin_url + basePluginWithout
+            }
           }
           var tmpPluginUrl = basePlugin + v + '/static'
           var tmpPluginWithoutUrl = basePluginWithout
@@ -496,7 +444,6 @@ const permission = {
         }
 
         Promise.all(lstPromises).then(function(rr) {
-          console.error('all promise loaded?')
           if (objToAdd.length <= 0) {
             resolve(0) // no plugins
           } else {
@@ -543,9 +490,11 @@ const permission = {
         console.error('in on completed here')
         console.error('adding of ')
         */
+        /*
         console.error('CORE: GENERATE ROUTES HERE')
         console.error(window.asyncTestRouterMapBootstrapTemp)
         console.error(window.asyncTestRouterMapBootstrapTemp.length)
+        */
         router.addRoutes(window.asyncTestRouterMapBootstrapTemp)
         var asyncRouterMapTmp = window.asyncTestRouterMapBootstrapTemp.concat(asyncRouterMap).concat([])
 
