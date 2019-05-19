@@ -1,0 +1,12 @@
+*
+!/src
+!/config
+!/build
+!package.json
+!/static
+!favicon.ico
+!index.html
+!entrypoint.sh
+!.eslint*
+!.babelrc
+!.postcssrc.js
