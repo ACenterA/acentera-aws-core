@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  core-vue:
+    build:
+      context: .
+    volumes:
+      - .:/usr/app/
+    environment:
+       HOST: 0.0.0.0
+       PORT: 80
+       #BASE_API: http://127.0.1.2:2000/api/
+    networks:
+      backend:
+        aliases:
+          - core-vue
+    ports:
+      - "127.0.1.2:80:80"
+
+networks:
+    backend:
+      name: ${COMPOSE_PROJECT_NAME}_backend
