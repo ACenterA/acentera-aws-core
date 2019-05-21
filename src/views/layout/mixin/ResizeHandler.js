@@ -19,7 +19,6 @@ export default {
     const isMobile = this.isMobile()
     if (isMobile) {
       store.dispatch('toggleDevice', 'mobile')
-      console.error('called close sidebar here 1')
       store.dispatch('closeSideBar', { withoutAnimation: true })
       store.dispatch('closeMainSideBar', { withoutAnimation: true })
     }
@@ -38,7 +37,6 @@ export default {
         store.dispatch('toggleDevice', isMobile ? 'mobile' : 'desktop')
 
         if (isMobile) {
-          console.error('called close sidebar here 2')
           store.dispatch('closeSideBar', { withoutAnimation: true })
           store.dispatch('closeMainSideBar', { withoutAnimation: true })
         }

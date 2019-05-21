@@ -314,10 +314,8 @@ const user = {
                   store.dispatch('REFRESH_COGNITO_USER').then((emptyFct) => {
                     const data = response.data
                     commit('SET_TOKEN', data.token)
-
                     // TODO: We should use some kond of encryption to send the token in an encrypted way ... even though we are using SSL ? ...
                     // Make Sure we do not keep any AWS Credentials locally. We keep it encrypted using AWS KMS.
-
                     if (data.status === 'NeedMFA' && data.code) {
                       commit('SET_NEED_MFA', data)
                       // NeedMFA

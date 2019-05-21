@@ -84,7 +84,6 @@ export default {
   },
   methods: {
     toggleSideBar() {
-      console.error(this.$store.state)
       if (this.$store.state.app.innerSidebar) {
         this.$store.dispatch('toggleMainSideBar')
         this.$store.dispatch('toggleSideBar')

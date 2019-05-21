@@ -112,10 +112,6 @@ export default {
       if (!this.isExternalLink(routePath)) {
         e.preventDefault()
         var path = this.resolvePath(routePath)
-        console.error(path)
-        console.error(this.$router)
-        console.error(this)
-        console.error(this.$route.params)
         // var pathTmp = path
         /*
         for(var k in this.$route.params) {
@@ -124,7 +120,6 @@ export default {
           path = path.replace(re, '')
         }
         */
-        console.error('new path : ' + path)
         this.$router.push(path)
       }
     },

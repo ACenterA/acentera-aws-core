@@ -502,7 +502,6 @@ export default {
       if (this.$store && this.$store.getters && this.$store.getters.settings) {
         return this.$store.getters.settings.missingDB === true
       }
-      console.error('aa')
       return true
     }
   },
@@ -566,10 +565,7 @@ export default {
       var self = this
       this.$store.dispatch('ValidateAccountIdSetup', postData).then((resp) => {
         if (resp) {
-          console.error('Got validate')
           self.resetForm()
-          console.error(resp)
-          console.error('set path to ')
           var routerNextPath = {
             path: '/bootstrap'
           }
@@ -581,8 +577,6 @@ export default {
               }
             }
           }
-          console.error('set path to')
-          console.error(routerNextPath)
           self.$router.push(routerNextPath)
           setTimeout(function() {
             self.loading = false
@@ -629,8 +623,6 @@ export default {
           self.codeConfirm.code = ''
           self.loading = false
         } else {
-          // console.error('loading success ...')
-          // this.$router.push({ path: this.redirect || '/' })
           setTimeout(function() {
             self.loading = false
             self.$router.push({ path: self.redirect || '/' })

@@ -111,7 +111,7 @@ export default {
     siteConfigError: 'An error occured. The site cannot be configured. Please contact support at support@acentera.com',
     siteConfigErrorReturn: 'An error occured. Please return to the previous webpage.',
     siteSetup: 'Install',
-    validateAWSAccountId: 'Enter your AWS Account numbere to proceed.',
+    validateAWSAccountId: 'Enter your AWS Account number to proceed.',
     accountid: '##########',
     loginSubmit: 'Submit',
     title: 'Login to my account',

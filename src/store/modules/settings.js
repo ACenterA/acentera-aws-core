@@ -435,10 +435,11 @@ const settings = {
               resolve('forced_no_internet_or_cookies')
             }
           }).catch(err => {
-            console.error(err)
-            // if (err) {
-            //  console.error('could not refresh cache')
-            // }
+            // console.error(err)
+            if (err) {
+              //  console.error('could not refresh cache')
+              resolve()
+            }
             resolve()
           })
           /*

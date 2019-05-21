@@ -71,7 +71,6 @@ export default {
     },
     getPluginSideMenu() {
       // if (this.isLoading)
-      // console.error('did it change here ?' + this.activePlugin)
       var canContinue = true
       /*
       if (this.lastActivePlugin !== this.activePlugin) {
@@ -86,34 +85,20 @@ export default {
       }
       */
       if (canContinue) {
-        console.error('test a333a')
-        console.error('GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
-        console.error(this.plugin_permission_routers[this.activePlugin])
         if (this.plugin_permission_routers[this.activePlugin]) {
-          console.error('OK HERE DIDSPACH SHOW?')
-          console.error('test a333bbb')
           // this.$store.dispatch('showInnerSidebarForce') // this make infinite loop ?
           return this.plugin_permission_routers[this.activePlugin]
         } else {
-          console.error('OK HERE DIDSPACH HIDE?')
-          console.error('test a333ccc')
           // this.$store.dispatch('hideInnerSidebarForce')
         }
       }
     }
   },
   mounted() {
-    console.error('mounted test a333a')
-    console.error('mounted GETE PLUGIN SIDE MENU USING PLUGIN OF ' + this.activePlugin)
-    console.error(this.plugin_permission_routers[this.activePlugin])
     if (this.plugin_permission_routers[this.activePlugin]) {
-      console.error('OK HERE DIDSPACH SHOW?')
-      console.error('test a333bbb')
       this.$store.dispatch('showInnerSidebarForce') // this make infinite loop ?
       return this.plugin_permission_routers[this.activePlugin]
     } else {
-      console.error('OK HERE DIDSPACH HIDE?')
-      console.error('test a333ccc')
       this.$store.dispatch('hideInnerSidebarForce')
     }
   },

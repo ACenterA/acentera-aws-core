@@ -249,12 +249,10 @@ const permission = {
             for (var w in innerMenusHash) {
               // Filter async router Test ... do we need ??
               const accessedInnerRoutersTmp = filterAsyncRouter(innerMenusHash[w], roles)
-              console.error(accessedInnerRoutersTmp)
               commit('ADD_INNER_PLUGINS', { plugin: w, routes: accessedInnerRoutersTmp })
             }
 
             if (accessedRoutersTmp) {
-              console.error(accessedRoutersTmp)
               window.app.$router.addRoutes(accessedRoutersTmp)
             }
             // window.plugin_loaded--
