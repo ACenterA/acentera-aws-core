@@ -84,7 +84,7 @@ export default {
     jwtinput: 'Entrez un secret complexe',
     serverjwt: 'Entrez un secret complexe',
     serverjwt_label: 'Server Secret. Conservez cette valeur sécurisé.',
-    admin_password: 'Create the Administrator Password',
+    admin_password: 'Inscrivez un mot de passe temporaire (8+ et complexe)',
     clientjwt: 'Entrez un secret complexe',
     clienttjwt_label: 'Client Secret.  Conservez cette valeur sécurisé.',
     JWTRequirements: 'Le JWT Secret doit être complex et supérieur à 12 charactaires',
@@ -92,7 +92,7 @@ export default {
     email_share_option: 'J\'accepte de partager mon address courriel avec ACenterA',
     email_share_option_two: 'Pour recevoir des notifications sur des mise a jours, ainsi que de problèmes de sécurité',
     email_share_option_tree: 'Vous pouvez vous désenregistré en envoyant un courriel a  support@acentera.com',
-    textinfo: 'Bienvenu a l\'instalation du system sur votre compte AWS. Veuillez prendre connaissance de la license de l\'application, si vous refuser les termes vous devez enlever l\'installation depuis votre compte AWS. Veuillez prendre note que nous avons créé certain roles nécessaire a l\'application et que par défaut nous activons l\'authentication a deux facteurs pour assurer la sécurité.'
+    textinfo: 'Bienvenu a l\'instalation du system sur votre compte AWS. Veuillez prendre connaissance de la license de l\'application, si vous refuser les termes vous devez enlever l\'installation depuis votre compte AWS. Veuillez prendre note que nous avons créé certain roles nécessaire a l\'application et que par défaut nous activons l\'authentication a deux facteurs pour assurer la sécurité. De plus, nous ne pouvons etre tenus responsable en cas de problemes avec votree compte AWS, nous avons fait tout notre possible pour assurer cela. Par contre, avec les logiciels il y a toujours des risques, si un probleme nous es reporter nous allons vous le communiquer dans un delais raisonable. Si vous trouver un bug, probleme, ou risque de security veuillez nous en faire part a support@acentera.com et nous allons faire notre possible pour y remedier.'
   },
   login: {
     name: 'Votre nom ( .Prenom Nom )',
@@ -145,7 +145,7 @@ export default {
     invalidPassword: 'L\'authentication a échoué. Vérifier votre courriel ainsi que votre mot de passe',
     UserNotFoundException: 'L\'authentication a échoué. Vérifier votre courriel ainsi que votre mot de passe',
     NotAuthorizedException: 'L\'authentication a échoué. Vérifier votre courriel ainsi que votre mot de passe',
-    PasswordDigitRequirements: 'Le mot de passe doit avoir plus de 6 caractères',
+    PasswordDigitRequirements: 'Le mot de passe doit être complexe et avoir plus de 8 caractères',
     UsernameEmailRequirements: 'Le nom d\'utilisateur doit être un addresse courriel valide.',
     username: 'Mon addresse courriel',
     password: 'Mon mot de passe',

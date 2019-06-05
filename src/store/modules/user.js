@@ -226,7 +226,7 @@ const user = {
           resolve(ff)
         }).catch((ex) => {
           // maybe not cognito authenticated ?
-          console.error(ex.stack)
+          // console.error(ex.stack)
           resolve(ex)
         })
       })
@@ -429,6 +429,7 @@ const user = {
       return new Promise((resolve, reject) => {
         userLoginUpdatePassword(userInfo.token, userInfo.password, userInfo.passwordConfirm, userInfo.code).then(response => {
           window.app.$message({ message: window.app.$t('login.passwordResetSuccessfully') + '', type: 'success' })
+          console.error('Sending LogOut here')
           store.dispatch('LogOut').then(() => {
             router.push({ path: '/login', replace: true, query: { noGoBack: false }})
           })
@@ -451,6 +452,7 @@ const user = {
       return new Promise((resolve, reject) => {
         registerFirstAdmin(username, userInfo.password).then(response => {
           window.app.$message({ message: window.app.$t('login.adminCreated'), type: 'success' })
+          console.error('Sending LogOut here (Register First)')
           store.dispatch('LogOut').then(() => {
             // location.reload()// In order to re-instantiate the vue-router object to avoid bugs
             store.dispatch('loginDisableFirstTime').then(() => {
@@ -685,7 +687,21 @@ const user = {
     // },
 
     // 登出
+    LogOutIfNotCognito({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        if (state.cognito == null) {
+          store.dispatch('LogOut').then(() => {
+            resolve(true)
+          }).catch(() => {
+            resolve(true)
+          })
+        } else {
+          reject(true)
+        }
+      })
+    },
     LogOut({ commit, state }) {
+      console.error('Received LogOut here')
       return new Promise((resolve, reject) => {
         logout(state.token).then(() => {
           commit('SET_TOKEN', '')
@@ -706,6 +722,7 @@ const user = {
 
     // This should be only a fed logout to signout from google, facebook, cognito etc?
     FedLogOut({ commit }) {
+      console.error('Received FedOut here')
       return new Promise(resolve => {
         commit('SET_TOKEN', '')
         commit('SET_CREDS', '')

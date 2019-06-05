@@ -84,6 +84,7 @@
           <div class="title-container">
             <lang-select class="set-language"/>
             <br><br><br>
+            <!-- accountIdNot Set -->
             <a href="/"><h3 class="title">{{ $t('login.siteConfigErrorReturn') }}</h3></a>
           </div>
         </el-form>
@@ -94,6 +95,7 @@
         <div class="title-container">
           <lang-select class="set-language"/>
           <br><br><br>
+          <!-- missindg and missing entry -->
           <h3 class="title">{{ $t('login.siteConfigErrorReturn') }}</h3>
         </div>
       </el-form>
@@ -112,8 +114,8 @@ export default {
   },
   data() {
     const validatePassword = (rule, value, callback) => {
-      if (value && value.length < 6) {
-        callback(new Error(this.$t('login.PasswordDigitRequirements'))) // 'The password can not be less than 6 digits'))
+      if (value && value.length < 8) {
+        callback(new Error(this.$t('login.PasswordDigitRequirements'))) // 'The password can not be less than 8 digits'))
       } else {
         callback()
       }
@@ -227,7 +229,29 @@ export default {
           // todo: show error ??
           self.loading = false
         }
-      }).catch(() => {
+      }).catch((err) => {
+        var errorMsg = 'bootstrap.error'
+        if (err && err.data && err.data.message) {
+          errorMsg = err.data.message.replace(/ /g, '.')
+        } else {
+          if (err && err.message) {
+            errorMsg = err.message
+          } else {
+            if (err) {
+              try {
+                errorMsg = 'Error: ' + JSON.stringify(err)
+              } catch (errStrirng) {
+                errorMsg = 'Error: ' + err
+              }
+            }
+          }
+        }
+        self.$notify({
+          title: self.$t('bootstrap.error'),
+          message: self.$t(errorMsg),
+          type: 'error',
+          duration: 2000
+        })
         // todo: show error message
         self.loading = false
       })

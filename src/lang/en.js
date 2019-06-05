@@ -82,7 +82,7 @@ export default {
     initialize: 'Configuration',
     password: 'Enter a temporary password',
     serverjwt_label: 'Server Secret. Keep this value secure.',
-    admin_password: 'Create the Administrator Password',
+    admin_password: 'Create the Administrator Password (8+ and complex)',
     serverjwt: 'Enter random complex string here',
     clientjwt: 'Enter random complex string here',
     clienttjwt_label: 'Client Secret. Keep this value secure.',
@@ -91,7 +91,7 @@ export default {
     email_share_option: 'I aggree to share my email address with ACenterA',
     email_share_option_tree: 'You may unsubscribe by sending an email to support@acentera.com',
     email_share_option_two: 'To receive notifications on product security issues and updates',
-    textinfo: 'Welcome to the application installer on your AWS Account. We request that you read the licencing of the application, if you refuse the terms we would ask you to remove the installation from your installed serverless applications. Please note that we have created few required IAM Roles for the application, including one that has Administrator access. By default we enforce the Multi-Factor authentication on all acccounts that will be created and assigned these roles to ensure high security level.'
+    textinfo: 'Welcome to the application installer on your AWS Account. We request that you read the licencing of the application, if you refuse the terms we would ask you to remove the installation from your installed serverless applications. Please note that we have created few required IAM Roles for the application, including one that has Administrator access. By default we enforce the Multi-Factor authentication on all acccounts that will be created and assigned these roles to ensure high security level. Also by using this software you accept any potential risks this software could cause, we did our best and any major bug or security issues will be communicated in a timely manner. You may send any bugs or exploits to support@acentera.com if you encounter any.'
   },
   login: {
     name: 'Your Fullname',
@@ -148,7 +148,7 @@ export default {
     passwordResetSuccessfully: 'Your password have been modified with success',
     titleForgetPassword: 'Forgot password',
     newPassword: 'Enter your new password',
-    PasswordDigitRequirements: 'The password must have at least 6 characters.',
+    PasswordDigitRequirements: 'The password must be complex and have at least 8 characters.',
     AccountIdRequirements: 'You must enter your AWS Account number to proceed with the setup.',
     UsernameEmailRequirements: 'The username must be a valid email address.',
     passwordMisMatch: 'The passwords does not match',

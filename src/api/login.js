@@ -94,7 +94,6 @@ export function registerByUsernameCode(username, password, code) {
 }
 
 export function logout() {
-  console.error('GOT LOGOUT CCALLED')
   return request({
     url: '/login/logout',
     method: 'post'

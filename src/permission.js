@@ -303,8 +303,10 @@ router.beforeEach((to, from, next) => {
                     })
                 }
                 */
-                store.dispatch('LogOut').then(() => {
+                store.dispatch('LogOutIfNotCognito').then(() => {
                   next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页
+                  store.commit('NPROGRESS_END')
+                }).catch(() => {
                   store.commit('NPROGRESS_END')
                 })
                 // next(`/login?redirect=${to.path}`) // 否则全部重定向到登录页

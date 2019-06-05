@@ -1,7 +1,7 @@
 import Cookies from 'js-cookie'
 import { validateAccountId, performAppInitialization } from '@/api/app'
 
-const staticAccountId = process.env.DEV_ACCOUNTID || ''
+const staticAccountId = process.env.DEV_ACCOUNTID || '0'
 
 const app = {
   state: {
@@ -414,10 +414,10 @@ const app = {
               return resolve(true)
             })
           } else {
-            return resolve(false)
+            return reject(response)
           }
         }).catch((ex) => {
-          resolve(ex)
+          reject(ex) // resolve(ex)
         })
       })
     },
